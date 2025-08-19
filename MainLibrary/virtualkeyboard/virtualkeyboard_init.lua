@@ -8,7 +8,7 @@ local vkb = {
 local function IntroduceLayout()
     local mode = vkb.mode[vkb.modeindex]
     if mode then
-        local path = "main/virtualkeyboard/"..mode
+        local path = "MainLibrary/virtualkeyboard/"..mode
         package.loaded[path] = nil
         vkb.newmode = require(path)
     end

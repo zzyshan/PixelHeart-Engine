@@ -1,5 +1,5 @@
 --本库全由deepseek写(zzy只负责可爱 不是),主要是因为我懒得写 ≡ω≡
-local serpent = require("main/save/serpent")
+local serpent = require("MainLibrary/save/serpent")
 
 local SaveSystem = {
     slots = 3,              -- 存档位数量
