@@ -1,22 +1,22 @@
 local lg = love.graphics
 
 -- Import Module
-scenes = require("(main/scenes")
-Keyboard = require("(main/Keyboard")
-global = require("(main/Global")
-Audio = require("(main/Audio")
-Sprites = require("(main/Sprites")
-typer = require("(main/typer")
-collision = require("(main/collision")
-layers = require("(main/Layers")
+scenes = require("main/scenes")
+Keyboard = require("main/Keyboard")
+global = require("main/Global")
+Audio = require("main/Audio")
+Sprites = require("main/Sprites")
+typer = require("main/typer")
+collision = require("main/collision")
+layers = require("main/Layers")
 Perf = require("perf")
-vkb = require("(main/virtualkeyboard/virtualkeyboard_init")
-mathlib = require("(main/mathlib")
+vkb = require("main/virtualkeyboard/virtualkeyboard_init")
+mathlib = require("main/mathlib")
 Player = require("Scripts/Libraries/Player")
-save = require("(main/save/SaveSystem")
-Camera = require("(main/camera")
-masks = require("(main/masks")
-DEBUG = require("(main/DEBUG")
+save = require("main/save/SaveSystem")
+Camera = require("main/camera")
+masks = require("main/masks")
+DEBUG = require("main/DEBUG")
 
 local gameWidth, gameHeight = 640, 480  -- Game internal resolution
 local gamescale = 1
