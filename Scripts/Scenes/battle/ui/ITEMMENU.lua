@@ -139,10 +139,9 @@ function ITEMMENU.update(ui)
         Player.sprite.hide = true
         Audio.PlaySound("snd_menu_1.wav")
         STATE("DIALOGRESULT")
-    end
-    
+        
     -- 取消选择
-    if Keyboard.getState("x") == 1 then
+    elseif Keyboard.getState("x") == 1 then
         ui.ClearTexts(ui.itemtext)
         if ITEMMENU.page_text then
             ITEMMENU.page_text:Remove()

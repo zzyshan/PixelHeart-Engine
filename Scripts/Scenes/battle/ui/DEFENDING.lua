@@ -24,8 +24,8 @@ function DEFENDING.update(ui)
                 x = Player.sprite.x,
                 y = Player.sprite.y,
                 angle = Player.sprite.angle,
-                Width = Player.battle.box.Width,
-                Height = Player.battle.box.Height
+                Width = Player.soul.box_w,
+                Height = Player.soul.box_h
             }) and not Player.hurting then
                 OnHit(bullet)
             end

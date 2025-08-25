@@ -1,6 +1,6 @@
 local lg = love.graphics
 
--- Import Module
+-- zh.导入模块 en.Import Module
 scenes = require("MainLibrary/scenes")
 Keyboard = require("MainLibrary/Keyboard")
 global = require("MainLibrary/Global")
@@ -12,25 +12,26 @@ layers = require("MainLibrary/Layers")
 Perf = require("perf")
 vkb = require("MainLibrary/virtualkeyboard/virtualkeyboard_init")
 mathlib = require("MainLibrary/mathlib")
-Player = require("Scripts/Libraries/Player")
+Player = require("Scripts/Libraries/Player/Player_init")
 save = require("MainLibrary/save/SaveSystem")
 Camera = require("MainLibrary/camera")
 masks = require("MainLibrary/masks")
 DEBUG = require("MainLibrary/DEBUG")
 
-local gameWidth, gameHeight = 640, 480  -- Game internal resolution
+local gameWidth, gameHeight = 640, 480  -- zh.游戏内部分辨率 en.Game internal resolution
 local gamescale = 1
 local screen_w, screen_h = love.graphics.getDimensions()
--- Calculate Scale
+-- zh.计算缩放比例 en.Calculate Scale
 local scaleX = screen_w / gameWidth
 local scaleY = screen_h / gameHeight
 local scale = math.min(scaleX, scaleY)
 
--- Calculate Offset
+-- zh.计算偏移量 en.Calculate Offset
 local draw_x = math.floor((screen_w - gameWidth * scale) * 0.5 + 0.5)
 local draw_y = math.floor((screen_h - gameHeight * scale) * 0.5 + 0.5)
 
--- Creates a global camera instance and sets it as the current camera
+-- ch.创建全局相机实例并设置为当前相机
+-- en.Creates a global camera instance and sets it as the current camera
 global.camera = Camera.new()
 Camera.SetCamera(global.camera)
 
@@ -87,12 +88,10 @@ end
 
 function love.draw()
     screen_w, screen_h = love.graphics.getDimensions()
-    -- Calculate Scale
     scaleX = screen_w / gameWidth
     scaleY = screen_h / gameHeight
     scale = math.min(scaleX, scaleY)
     
-    -- Calculate Offset
     draw_x = math.floor((screen_w - gameWidth * scale) * 0.5 + 0.5)
     draw_y = math.floor((screen_h - gameHeight * scale) * 0.5 + 0.5)
 
@@ -101,18 +100,21 @@ function love.draw()
 
     love.graphics.push()
         love.graphics.scale(scale, scale)
-        -- Apply Camera Transform
+        -- zh.应用相机变换 
+        -- en.Apply Camera Transform
         if Camera.NewCamera then
             Camera.NewCamera:apply()
         end
-        Perf.draw()
+
         layers.sort()
+
         if scenes.newscene and scenes.newscene.draw then
             scenes.newscene.draw()
         end
         DEBUG.draw()
         layers.sortTop()
-        -- End Camera Transform
+        -- zh.结束相机变换 
+        -- en.End Camera Transform
         if Camera.NewCamera then
             Camera.NewCamera:detach()
         end
@@ -123,9 +125,11 @@ function love.draw()
     love.graphics.push()
         love.graphics.translate(draw_x, draw_y)
         love.graphics.setColor(1, 1, 1)
+        
         if DEBUG.switch then
             love.graphics.rectangle("line", 0, 0, CANVAS:getWidth(), CANVAS:getHeight())
         end
+        
         local shaders = global.GetVar("ScreenShaders") or {}
 
         if (#shaders > 0) then

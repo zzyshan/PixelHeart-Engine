@@ -1,7 +1,7 @@
 local battle_init = {}
 
 local path = "Scripts/Scenes/Overworld/"
-Encounter = require("Scripts/Waves/" .. scenes.BATTLE .. "/Encounter") -- 这个scenes.BATTLE详见(main/scenes.lua
+Encounter = require("Scripts/Waves/" .. scenes.BATTLE .. "/Encounter") -- 这个scenes.BATTLE详见MainLibrary/scenes.lua
 Arenas = require("Scripts/Libraries/Arenas")
 
 battle = {
@@ -70,7 +70,6 @@ end
 function battle_init.load()
     scenes.Settype("battle")
     save.load(1)
-    Player.load()
     Player.init()
     if battle.Playerload then
         battle.Playerload()

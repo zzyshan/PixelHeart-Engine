@@ -135,7 +135,12 @@ function Camera.update(dt)
 end
 
 function Camera.SetCamera(camera)
-    Camera.NewCamera = camera
+    if camera then
+        Camera.NewCamera = camera
+        print("en.Camera set up")
+    else
+        print("en.Camera doesn't exist?")
+    end
 end
 
 return Camera

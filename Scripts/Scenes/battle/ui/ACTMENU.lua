@@ -123,10 +123,9 @@ function ACTMENU.update(ui)
             
             -- 对话
             STATE("DIALOGRESULT")
-        end
-        
+            
         -- 取消键（X键）：返回敌人选择
-        if Keyboard.getState("x") == 1 then  
+        elseif Keyboard.getState("x") == 1 then  
             -- 清除行动菜单文本
             for i = #ui.enemie_acttext, 1, -1 do
                 ui.enemie_acttext[i]:Remove()

@@ -38,6 +38,8 @@ function scenes.over()
 end
 
 function scenes.into(scenename, new)--进入场景
+    Player.save()
+    print("en.Enter Scene:" .. scenename)
     scenes.over()
     scenes.newscene = scenes.Load(scenename, new)
 end

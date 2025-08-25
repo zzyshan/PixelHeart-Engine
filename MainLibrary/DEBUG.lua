@@ -7,6 +7,7 @@ function DEBUG.draw()
         love.graphics.print(tostring(love.timer.getFPS()), 10, 100)
         Player.DEBUG()
         layers.DEBUG()
+        Perf.draw()
     end
 end
 

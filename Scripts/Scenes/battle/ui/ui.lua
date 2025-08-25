@@ -96,6 +96,7 @@ function ui.update(dt)
         end
 
         ui.newState = ui.State[ui.Stateindex]
+        print("oldbutton: " .. ui.oldState .. "newbutton: " .. ui.newState)
         ui.oldState = ui.newState
     end
     -------------- end -----------------------------
@@ -115,6 +116,7 @@ function ui.update(dt)
             Player.canmove = true
         end
         battle.EnteringState(battle.State, battle.oldState)
+        print("newState:" .. battle.State .. " oldState:" .. battle.oldState)
         battle.oldState = battle.State
     end
        

@@ -1,8 +1,6 @@
 local mathlib = {}
 
--- ====================
--- 常量定义 (直接作为属性)
--- ====================
+---------- 常量定义 ----------
 mathlib.PI = 3.141592653589793
 mathlib.TAU = 6.283185307179586  -- 2π
 mathlib.E = 2.718281828459045
@@ -14,9 +12,7 @@ mathlib.RAD2DEG = 57.29577951308232  -- 180/π
 mathlib.INF = math.huge
 mathlib.EPSILON = 1e-10  -- 浮点数精度容差
 
--- ====================
--- 基础运算函数
--- ====================
+-------- 基础运算函数 ---------
 
 -- 限制数值在指定范围内
 function mathlib.clamp(value, min, max)
@@ -47,9 +43,7 @@ function mathlib.lcm(a, b)
     return math.abs(a * b) / mathlib.gcd(a, b)
 end
 
--- ====================
--- 几何函数
--- ====================
+---------- 几何函数 --------
 
 -- 计算两点间距离
 function mathlib.distance(x1, y1, x2, y2)
@@ -62,43 +56,19 @@ function mathlib.distanceSq(x1, y1, x2, y2)
     return dx*dx + dy*dy
 end
 
--- 点是否在矩形内
-function mathlib.pointInRect(px, py, rx, ry, rw, rh)
-    return px >= rx and px <= rx + rw and py >= ry and py <= ry + rh
-end
-
--- 点是否在圆内
-function mathlib.pointInCircle(px, py, cx, cy, radius)
-    return (px - cx)^2 + (py - cy)^2 <= radius^2
-end
-
 -- 计算角度（弧度）
 function mathlib.angle(x1, y1, x2, y2)
     return math.atan2(y2 - y1, x2 - x1)
 end
 
--- ====================
--- 三角函数
--- ====================
-
--- 角度转弧度
-function mathlib.toRadians(degrees)
-    return degrees * mathlib.DEG2RAD
-end
-
--- 弧度转角度
-function mathlib.toDegrees(radians)
-    return radians * mathlib.RAD2DEG
-end
+-------- 三角函数 ----------
 
 -- 方向向量
 function mathlib.direction(angle)
     return math.cos(angle), math.sin(angle)
 end
 
--- ====================
--- 向量操作 (保持为子模块，因为使用频率高)
--- ====================
+-------- 向量操作 ---------
 mathlib.vec2 = {}
 
 -- 创建新向量
@@ -130,9 +100,7 @@ function mathlib.vec2.normalize(v)
     return {x = 0, y = 0}
 end
 
--- ====================
--- 插值函数
--- ====================
+--------- 插值函数 ---------
 
 -- 线性插值
 function mathlib.lerp(a, b, t)
@@ -140,15 +108,13 @@ function mathlib.lerp(a, b, t)
 end
 
 
+-------- 动画与插值 ---------
+
 -- 平滑插值
 function mathlib.smoothstep(min, max, value)
     local x = math.max(0, math.min(1, (value - min) / (max - min)))
     return x * x * (3 - 2 * x)
 end
-
--- ====================
--- 动画与插值
--- ====================
 
 -- 平滑过渡到目标值
 function mathlib.smooth(value, target, speed)
@@ -176,9 +142,7 @@ function mathlib.smoothClamped(value, target, speed, maxDelta)
     return mathlib.smooth(value, value + delta, speed)
 end
 
--- ====================
--- 随机函数
--- ====================
+------- 随机函数 --------
 
 -- 在范围内生成随机整数
 function mathlib.randomInt(min, max)
@@ -195,9 +159,7 @@ function mathlib.randomChoice(tbl)
     return tbl[math.random(1, #tbl)]
 end
 
--- ====================
--- 实用工具
--- ====================
+-------- 实用工具 ---------
 
 -- 颜色转换：HSV 到 RGB
 function mathlib.hsvToRgb(h, s, v)
