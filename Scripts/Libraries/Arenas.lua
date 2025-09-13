@@ -78,11 +78,11 @@ local Arena_function = {
                 local r = math.rad(Arena.angle)
                 local w, h = Arena.width, Arena.height
                 local sin, cos = math.sin(r), math.cos(r)
-                local X = (Player.sprite.x - black.x) * cos + (Player.sprite.y - black.y) * sin
-                local Y = (Player.sprite.y - black.y) * cos - (Player.sprite.x - black.x) * sin
+                local dx = (Player.sprite.x - black.x)
+                local dy = (Player.sprite.y - black.y)
                 
-                if X >= -w / 2 + 8 and X <= w / 2 -8 and
-                  Y >= h / 2 - 8 and Y <= -h / 2 + 8 then
+                if dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 -8 and
+                  dy * cos - dx * sin >= h / 2 - 8 and dy * cos - dx * sin <= -h / 2 + 8 then
                     Arena.containing = true
                 else
                     Arena.containing = false
@@ -105,6 +105,26 @@ local Arena_function = {
                     -- down
                     while ((Player.y - black.y) * cos + (Player.x - black.x) * -sin > h / 2 - 8) do
                          Player:Move(sin, -cos)
+                    end
+                end
+                
+                local Player_soul = Player.soul.mode
+                local Player_cos, Player_sin = math.cos(math.rad(Player.sprite.angle)), math.sin(math.rad(Player.sprite.angle))
+                local targetX = Player.sprite.x - (1 * Player_sin)
+                local targetY = Player.sprite.y + (1 * Player_cos)
+                
+                dx = targetX - black.x
+                dy = targetY - black.y
+                
+                if (dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 - 8 and
+                            dx * -sin + dy * cos >= -h / 2 + 8 and dx * -sin + dy * cos <= h / 2 - 8
+                        ) then
+                    if Player_soul.name == "bluesoul" then
+                        Player_soul.var.canjump = false
+                    end
+                else
+                    if Player_soul.name == "bluesoul" then
+                        Player_soul.var.canjump = true
                     end
                 end
             end

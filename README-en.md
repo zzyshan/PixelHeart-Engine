@@ -30,7 +30,7 @@ This engine is built on LÖVE version 11.5. Please ensure you are using LÖVE **
 
 | Module | Status | Completion |
 |------|------|--------|
-| **Battle System** | ✅ Mostly Complete | ~85% |
+| **Battle System** | ✅ Mostly Complete | ~90% |
 | **Overworld** | 🚧 In Development | ~30% |
 | **Shop System** | ❌ Not Started | 0% |
 

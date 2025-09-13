@@ -31,7 +31,7 @@ function MERCYMENU.update(ui)
     Player.sprite.x = newmercy.x[1] - 25
     Player.sprite.y = newmercy.y[1] + 15
     
-    if Keyboard.getState("up") == 1 then
+    if Keyboard.getState("up") == 1 and #MERCYMENU.text > 1 then
         if MM.mercyindex > 1 then
             MM.mercyindex = MM.mercyindex - 1
             Audio.PlaySound("snd_menu_0.wav")
@@ -39,9 +39,7 @@ function MERCYMENU.update(ui)
             MM.mercyindex = #MM.text
             Audio.PlaySound("snd_menu_0.wav")
         end
-    end
-    
-    if Keyboard.getState("down") == 1 then
+    elseif Keyboard.getState("down") == 1 and #MERCYMENU.text > 1 then
         if MM.mercyindex < #MM.text then
             MM.mercyindex = MM.mercyindex + 1
             Audio.PlaySound("snd_menu_0.wav")

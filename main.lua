@@ -59,17 +59,16 @@ INTERMEDIATE_CANVAS:setFilter("nearest", "nearest")
 global.SetVar("ScreenShaders", {})
 
 function love.load()
+    --Audio.PlayMusic("lovve.ogg",true,0.8)
     save.init() -- 存档初始化
     Player.init()
     if love.system.getOS() == "Android" then
         love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
     end
     -- 初始化场景
-    qwq = Sprites.New("bullet.png", {0, 200}, 100)
     scenes.into("battle", "poseur")
 end
 
-local time = 0
 function love.update(dt)
     Perf.update(dt)
     Keyboard.update(dt)
@@ -79,8 +78,6 @@ function love.update(dt)
     Player.update(dt)
     Camera.update(dt)
     typer.allupdate(dt)
-    time = time + 1
-    qwq.x = 320 + 640 * math.sin(time/30)
     if scenes.newscene and scenes.newscene.update then
         scenes.newscene.update(dt)
     end

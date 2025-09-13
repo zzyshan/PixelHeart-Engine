@@ -212,7 +212,7 @@ function ATTACKING.update(ui)
         -- 被迫这么对准╥﹏╥
         if not text.Alignment and next(text.char) then
             local width, _ = text:GetLettersSize() or 0, 0
-            text.x[1] = text.x[1] - width * 2
+            text.x[1] = text.x[1] - width / 2
             text.Alignment = true
         end
         

@@ -49,7 +49,7 @@ end
 function masks:Follow(target)
     self.x = target.x
     self.y = target.y
-    self.angle = target.angle or 0
+    self.angle = target.angle
     self.w = target:getWidth()
     self.h = target:getHeight()
 end
@@ -73,8 +73,11 @@ function masks.draw(tableaux)
             if mask.isactive then
                 love.graphics.push()
                 -- 切换坐标轴的位置和角度,使得mask到相应的位置
-                love.graphics.translate(mask.x, mask.y)
-                love.graphics.rotate(mask.angle)
+                local newX = mask.x
+                local newY = mask.y
+                
+                love.graphics.translate(newX, newY)
+                love.graphics.rotate(math.rad(mask.angle))
                 
                 if mask.shape == "rectangle" then
                     love.graphics.rectangle("fill", -mask.w/2, -mask.h/2, mask.w, mask.h)

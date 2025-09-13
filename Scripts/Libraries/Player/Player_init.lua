@@ -40,6 +40,7 @@ function Player.init(position)
         Player_ow.lastAnim = Player_ow.anim
     elseif scenes.Gettype() == "battle" then
         Player.soul = require(path .. "soul/soul_init")
+        
         Player.sprite = Sprites.New("ui/Player.png", position or {320, 240}, 3)
         local color = Player.soul.mode.color or {1, 1, 1}
         Player.sprite:SetColor(unpack(color))
@@ -53,6 +54,7 @@ function Player.Hurt(damage, time, isplaysound)
         Player.hurting = true
     else
         Player.Hp = 0
+        Player.hurting = true
     end
     
     local sound = isplaysound or true

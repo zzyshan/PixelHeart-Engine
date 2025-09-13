@@ -3,16 +3,14 @@ local typers = {}
 local mt = { __index = typers }
 
 -- 状态常量
-local STATE_IDLE = 0 -- 空闲状态
-local STATE_TYPING = 1 -- 打字状态
-local STATE_WAITING = 2 -- 等待状态
-local STATE_PAGE_END = 3 -- 一页结束状态
-local STATE_FINISHED = 4 -- 全部完全状态
+local STATE_IDLE = 0
+local STATE_TYPING = 1
+local STATE_WAITING = 2
+local STATE_PAGE_END = 3
+local STATE_FINISHED = 4
 
 -- 字体缓存
 local fontCache = {}
-
---------- 临时函数 -----------
 
 -- UTF-8字符长度计算
 local function utf8CharLength(b)
@@ -20,18 +18,17 @@ local function utf8CharLength(b)
     return b > 239 and 4 or b > 223 and 3 or b > 127 and 2 or 1
 end
 
--- 获得delta
-local function getdelta(currentText, index)
+-- 获取字符增量
+local function getCharDelta(currentText, index)
     local b = string.byte(currentText, index)
     return utf8CharLength(b)
 end
 
--- 获得letter
-local function getletter(currentText, index)
+-- 获取字符
+local function getChar(currentText, index)
     local b = string.byte(currentText, index)
     local delta = utf8CharLength(b)
-    local letter = currentText:sub(index, index + delta - 1)
-    return letter
+    return currentText:sub(index, index + delta - 1), delta
 end
 
 -- 解析颜色值
@@ -54,15 +51,16 @@ local function loadFont(name, size)
     end
 end
 
---------- end --------------
 -- 创建打字机
 function typers.New(text, position, depth, settings)
-    local settings = settings or {}
+    settings = settings or {}
     local self = setmetatable({}, mt)
     
+    -- 基本属性
     self.text = type(text) == "table" and text or {text}
     self.page = 1
-    self.x, self.y = {position[1] or 320}, {position[2] or 240}
+    self.x = {position[1] or 320}
+    self.y = {position[2] or 240}
     self.char_x, self.char_y = settings.char_x or 0, settings.char_y or 0
     self.xchar_spacing, self.ychar_spacing = settings.xchar_spacing or 2, settings.ychar_spacing or 2
     self.size = settings.size or 24
@@ -73,19 +71,18 @@ function typers.New(text, position, depth, settings)
     self.angle = {settings.angle or 0}
     self.voice = type(settings.voice) == "table" and settings.voice or {settings.voice}
     self.char = {}
-    self.speed = settings.speed or 20
-    self.sleep = settings.sleep or 20
+    self.speed = settings.speed or 0.05
+    self.sleep = settings.sleep or 0.05
     self.time = self.speed
     self.index = 1
     self.qie = 1
     self.T_STATE = STATE_TYPING
     self.type = "typer"
-    self.effect = {
-        name = nil,
-        effectstrength = nil
-    }
+    self.effect = {name = nil, effectstrength = nil}
     self.offset = {}
     self.Createtime = love.timer.getTime()
+    
+    -- 控制属性
     self.noGlobal = nil
     self.mode = nil
     self.control = nil
@@ -100,6 +97,7 @@ function typers.New(text, position, depth, settings)
     return self
 end
 
+-- 全局更新
 function typers.allupdate(dt)
     for _, tpr in ipairs(layers.objects.manual) do
         if not tpr.remove and not tpr.noGlobal then
@@ -130,7 +128,7 @@ function typers.PreloadFont(fontPaths)
     for _, font in ipairs(fontPaths) do
         local fontPath = "Sprites/Fonts/"..font
         if love.filesystem.getInfo(fontPath) then
-            fontCache[font] = love.graphics.newFont(fontPath, 24)  -- 默认大小
+            fontCache[font] = love.graphics.newFont(fontPath, 24)
             fontCache[font]:setFilter("nearest", "nearest")
         else
             print("WARNING: Preload font not found: "..fontPath)
@@ -148,6 +146,7 @@ function typers.UnloadFont(fontpath)
     end
 end
 
+-- 清除所有打字机
 function typers.clear()
     for i = #layers.objects.manual, 1, -1 do
         local tpr = layers.objects.manual[i]
@@ -157,60 +156,73 @@ function typers.clear()
     end
 end
 
--------- typer方法 ---------+
+-- 更新打字机
 function typers:update(dt)
-    -- 确保 x, y, angle 是表
+    -- 确保属性是表
     if type(self.x) ~= "table" then self.x = {self.x} end
     if type(self.y) ~= "table" then self.y = {self.y} end
     if type(self.angle) ~= "table" then self.angle = {self.angle} end
 
-    if self.remove then return end
-    if self.T_STATE == STATE_FINISHED then return end
+    if self.remove or self.T_STATE == STATE_FINISHED then return end
     
-    if not self.remove and self.T_STATE == STATE_TYPING then
+    if self.T_STATE == STATE_TYPING then
         if self.instant then
-            while self.T_STATE ~= STATE_FINISHED and self.instant do
-                if self.T_STATE == STATE_PAGE_END then
-                     self.instant = false
-                     break
-                end
-                self:printNextChar()
-
-                if self.skipUnitsRemaining and self.skipUnitsRemaining > 0 then
-                    self.skipUnitsRemaining = self.skipUnitsRemaining - 1
-                    if self.skipUnitsRemaining <= 0 then
-                        self.skipUnitsRemaining = nil -- 清除计数器
-                        self.instant = false
-                        self.canskip = true
-                    end
-                end
-
-                local currentText = self.text[self.page]
-                if self.index > #currentText then
-                    self.T_STATE = STATE_PAGE_END
-                    self.instant = false -- 确保在页面结束时也退出 instant
-                    break
-                end
-            end
+            self:processInstantMode()
         else
-            if self.T_STATE ~= STATE_PAGE_END then
-                 self.time = self.time + dt
-                 local charDelay = 1 / self.speed
-                 while self.time >= charDelay do
-                     self.time = 0
-                     self:printNextChar()
-                     if self.T_STATE == STATE_PAGE_END or self.T_STATE == STATE_FINISHED then
-                         break
-                     end
-                 end
+            self:processNormalMode(dt)
+        end
+    end
+end
+
+-- 处理即时模式
+function typers:processInstantMode()
+    while self.T_STATE ~= STATE_FINISHED and self.instant do
+        if self.T_STATE == STATE_PAGE_END then
+            self.instant = false
+            break
+        end
+        
+        self:ProcessNextChar()
+
+        -- 处理跳过计数
+        if self.skipUnitsRemaining and self.skipUnitsRemaining > 0 then
+            self.skipUnitsRemaining = self.skipUnitsRemaining - 1
+            if self.skipUnitsRemaining <= 0 then
+                self.skipUnitsRemaining = nil
+                self.instant = false
+                self.canskip = true
+            end
+        end
+
+        -- 检查是否到达文本末尾
+        local currentText = self.text[self.page]
+        if self.index > #currentText then
+            self.T_STATE = STATE_PAGE_END
+            self.instant = false
+            break
+        end
+    end
+end
+
+-- 处理普通模式
+function typers:processNormalMode(dt)
+    if self.T_STATE ~= STATE_PAGE_END then
+        self.time = self.time + dt
+        while self.time >= self.speed do
+            self.speed = self.sleep
+            self.time = 0
+            self:ProcessNextChar()
+            if self.T_STATE == STATE_PAGE_END or self.T_STATE == STATE_FINISHED then
+                break
             end
         end
     end
 end
 
--- 处理下个字符
-function typers:printNextChar()
+-- 处理下一个字符
+function typers:ProcessNextChar()
     local currentText = self.text[self.page]
+    
     -- 检查是否到达文本末尾
     if self.index > #currentText then
         self.T_STATE = STATE_PAGE_END
@@ -221,102 +233,103 @@ function typers:printNextChar()
         return
     end
 
-    local letter = getletter(currentText, self.index)
-    local intervalX, intervalY = fontCache[self.font]:getWidth(letter), fontCache[self.font]:getHeight(letter)
+    local letter, delta = getChar(currentText, self.index)
+    local font = fontCache[self.font]
+    local intervalX, intervalY = font:getWidth(letter), font:getHeight(letter)
 
-    while letter == "\n" do
-        self.char_x = 0
-        self.char_y = self.char_y + intervalY + self.ychar_spacing
-        self.index = self.index + getdelta(currentText, self.index)
-        letter = getletter(currentText, self.index)
-
-        if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
-             self.unitsToSkip = self.unitsToSkip - 1
-             if self.unitsToSkip <= 0 then
-                 self.unitsToSkip = nil -- 清除计数器
-                 self.instant = false
-                 self.canskip = true
-                 return 
-             end
-        end
+    -- 处理特殊字符
+    if letter == "\n" then
+        self:handleNewline(intervalY)
+        return
+    elseif letter == " " then
+        self:handleSpace(intervalX)
+        return
+    elseif letter == "[" then
+        self:handleTag(currentText)
+        return
     end
 
-    -- 处理空格
-    while letter == " " do
-        self.index = self.index + 1
-        self.char_x = self.char_x + intervalX
-        letter = getletter(currentText, self.index)
-
-        if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
-             self.unitsToSkip = self.unitsToSkip - 1
-             if self.unitsToSkip <= 0 then
-                 self.unitsToSkip = nil
-                 self.instant = false
-                 self.canskip = true
-                 return
-             end
-        end
-    end
-
-    -- 处理标签
-    while letter == "[" do
-        local tagStart = self.index
-        local tagEnd = currentText:find("]", tagStart)
-        if not tagEnd then
-            break
-        end
-        local tagContent = currentText:sub(tagStart + 1, tagEnd - 1) -- 去掉 []
-        local _, _, head, body = tagContent:find("^([%w_]+):?(.*)$")
-        if head then
-            local attached = body ~= ""
-            self:processTag(head, body, attached)
-        end
-
-        self.index = tagEnd + 1
-        -- 获取下一个字符
-        if self.index <= #currentText then
-            letter = getletter(currentText, self.index)
-        else
-            break
-        end
-
-        if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
-             self.unitsToSkip = self.unitsToSkip - 1
-             if self.unitsToSkip <= 0 then
-                 self.unitsToSkip = nil
-                 self.instant = false
-                 self.canskip = true
-                 return
-             end
-        end
-    end
-
+    -- 处理跳过模式
     if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
-        -- 跳过这个字符（不调用 addchar）
-        self.index = self.index + getdelta(currentText, self.index)
-        self.char_x = self.char_x + intervalX + self.xchar_spacing -- 更新位置
+        self:handleSkipMode(currentText, delta, intervalX)
+        return
+    end
 
+    -- 添加普通字符
+    self:addChar(letter)
+    
+    -- 检查是否到达文本末尾
+    if self.index > #currentText then
+        self.T_STATE = STATE_PAGE_END
+    end
+end
+
+-- 处理换行
+function typers:handleNewline(intervalY)
+    self.char_x = 0
+    self.char_y = self.char_y + intervalY + self.ychar_spacing
+    self.index = self.index + 1 -- 换行符只占一个字节
+    
+    -- 处理跳过模式
+    if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
         self.unitsToSkip = self.unitsToSkip - 1
         if self.unitsToSkip <= 0 then
             self.unitsToSkip = nil
             self.instant = false
             self.canskip = true
-            -- 检查是否到达文本末尾
-            if self.index > #currentText then
-                self.T_STATE = STATE_PAGE_END
-            end
-            return 
         end
-        -- 检查是否到达文本末尾
-        if self.index > #currentText then
-            self.T_STATE = STATE_PAGE_END
+    end
+end
+
+-- 处理空格
+function typers:handleSpace(intervalX)
+    self.index = self.index + 1
+    self.char_x = self.char_x + intervalX
+    
+    -- 处理跳过模式
+    if self.instant and self.unitsToSkip and self.unitsToSkip > 0 then
+        self.unitsToSkip = self.unitsToSkip - 1
+        if self.unitsToSkip <= 0 then
+            self.unitsToSkip = nil
+            self.instant = false
+            self.canskip = true
         end
-        return 
+    end
+end
+
+-- 处理标签
+function typers:handleTag(currentText)
+    local tagStart = self.index
+    local tagEnd = currentText:find("]", tagStart)
+    if not tagEnd then
+        self.index = self.index + 1
+        return
+    end
+    
+    local tagContent = currentText:sub(tagStart + 1, tagEnd - 1)
+    local _, _, head, body = tagContent:find("^([%w_]+):?(.*)$")
+    
+    if head then
+        local attached = body ~= ""
+        self:processTag(head, body, attached)
     end
 
-    -- 如果不是在带数量跳过模式，则正常添加字符
-    self:addchar(letter)
+    self.index = tagEnd + 1
+end
 
+-- 处理跳过模式
+function typers:handleSkipMode(currentText, delta, intervalX)
+    self.index = self.index + delta
+    self.char_x = self.char_x + intervalX + self.xchar_spacing
+
+    self.unitsToSkip = self.unitsToSkip - 1
+    if self.unitsToSkip <= 0 then
+        self.unitsToSkip = nil
+        self.instant = false
+        self.canskip = true
+    end
+    
+    -- 检查是否到达文本末尾
     if self.index > #currentText then
         self.T_STATE = STATE_PAGE_END
     end
@@ -324,10 +337,10 @@ end
 
 -- 标签处理方法
 function typers:processTag(head, body, attached)
+    head = head:lower()  -- 统一转换为小写
+    
     if attached then
-        head = head:lower()  -- 统一转换为小写
-        
-        -- 标签参数处理逻辑
+        -- 处理带参数的标签
         if head == "color" then
             local color = parseColor(body)
             self:SetColor(color[1], color[2], color[3], false)
@@ -341,13 +354,13 @@ function typers:processTag(head, body, attached)
             self:SetyCharSpacing(tonumber(body))
         elseif head == "wait" then
             self.time = 0
-            self.sleep = tonumber(body)
+            self.speed = tonumber(body)
         elseif head == "skip" then
             self:skip(tonumber(body))
         elseif head == "font_size" then
             self:SetScale(tonumber(body))
         elseif head == "speed" then
-            self.speed = tonumber(body)
+            self.sleep = tonumber(body)
         elseif head == "offsetx" then
             self.offset = self.offset or {}
             self.offset.x = tonumber(body)
@@ -355,8 +368,7 @@ function typers:processTag(head, body, attached)
             self.offset = self.offset or {}
             self.offset.y = tonumber(body)
         elseif head == "position" then
-            local x = body:sub(1,body:find(",") - 1)
-            local y = body:sub(#x + 2, -1)
+            local x, y = body:match("([^,]+),([^,]+)")
             self.qie = self.qie + 1
             self.angle[self.qie] = 0
             self.char_x = 0
@@ -391,8 +403,6 @@ function typers:processTag(head, body, attached)
             self.y[self.qie] = self.y[self.qie - 1] + tonumber(body)
         elseif head == "effect" then
             local effect, strength = body:match("^%s*([%w_]+)%s*,?%s*(%d*%.?%d*)%s*$")
-            
-            -- 如果匹配失败，尝试只获取效果名称
             if not effect then
                 effect = body:match("^%s*([%w_]+)%s*$")
             end
@@ -406,13 +416,12 @@ function typers:processTag(head, body, attached)
         elseif head == "voice" then
             self.voice = {}
             for voice in body:gmatch("[^,]+") do
-                voice = voice:match("^%s*(.-)%s*$") -- 去除前后空格
+                voice = voice:match("^%s*(.-)%s*$")
                 if voice ~= "" then
                     table.insert(self.voice, voice)
                 end
             end
         elseif head == "call" then
-            -- 参数解析
             local funcname, params = body:match("^([%w_]+)%s*:%s*(.*)$")
             if not funcname then
                 print("WARNING: Invalid func tag format:", body)
@@ -425,12 +434,9 @@ function typers:processTag(head, body, attached)
                 return
             end
 
-            -- 参数解析
             local paramstable = {}
             for param in params:gmatch("[^,]+") do
-                param = param:match("^%s*(.-)%s*$")  -- 去除前后空格
-
-                -- 类型转换
+                param = param:match("^%s*(.-)%s*$")
                 if param == "true" then
                     table.insert(paramstable, true)
                 elseif param == "false" then
@@ -439,11 +445,10 @@ function typers:processTag(head, body, attached)
                     table.insert(paramstable, nil)
                 else
                     local num = tonumber(param)
-                    table.insert(paramstable, num or param)  -- 数字或字符串
+                    table.insert(paramstable, num or param)
                 end
             end
 
-             -- 调用函数
             local success, err = pcall(function()
                 func(unpack(paramstable))
             end)
@@ -452,7 +457,7 @@ function typers:processTag(head, body, attached)
             end
         end
     else 
-        -- 处理特殊标签
+        -- 处理无参数标签
         if head == "noskip" then
             self.canskip = false
         elseif head == "nextpage" then
@@ -479,7 +484,7 @@ function typers:processTag(head, body, attached)
 end
 
 -- 添加字符
-function typers:addchar(char)
+function typers:addChar(char)
     if not self.instant and char ~= " " and #self.voice > 0 then
         Audio.PlaySound("Voices/"..self.voice[math.random(#self.voice)], false, 1)
     end
@@ -518,17 +523,16 @@ function typers:addchar(char)
     
     table.insert(self.char, character)
     self.char_x = self.char_x + intervalX + self.xchar_spacing
-    self.index = self.index + getdelta(self.text[self.page], self.index)
+    self.index = self.index + getCharDelta(self.text[self.page], self.index)
 end
 
+-- 绘制
 function typers:draw()
     for _, char in ipairs(self.char) do
-        if not self.remove and not self.hide then
-            if char.intext then
-                char.x[1] = self.x[char.qie] + char.x[2]
-                char.y[1] = self.y[char.qie] + char.y[2]
-                char.angle = self.angle[char.qie]
-            end
+        if not self.remove and not self.hide and char.intext then
+            char.x[1] = self.x[char.qie] + char.x[2]
+            char.y[1] = self.y[char.qie] + char.y[2]
+            char.angle = self.angle[char.qie]
             
             self:applyEffect(char)
             
@@ -548,12 +552,11 @@ function typers:draw()
         end
     end
 
-    love.graphics.setColor(1, 1, 1, 1)  -- 重置颜色
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 -- 应用效果
 function typers:applyEffect(char)
-    -- 处理字符效果
     if char.effect.name == "shake" then
         char.effect.offsetx = char.effect.effectstrength * math.random(-1, 1)
         char.effect.offsety = char.effect.effectstrength * math.random(-1, 1)
@@ -564,10 +567,7 @@ function typers:applyEffect(char)
     end
 end
 
--------- end --------------+
-
--------- 小方法 -----------++
--- 输入
+-- 输入处理
 function typers:Pressed()
     if self.mode ~= "manual" then return end
     
@@ -584,28 +584,12 @@ function typers:Pressed()
         inputPressed = GettouchState() == 1
     end
 
-    if type(inputPressed) == "boolean" and inputPressed then
+    if inputPressed then
         if self.canskip and not self.instant then
             self:skip()
         end
 
         if self.T_STATE == STATE_PAGE_END then
-            self.page = self.page + 1
-            self:Reset()
-            if self.page > #self.text then
-                self.T_STATE = STATE_FINISHED
-                if self.over then
-                    self.over()
-                end
-                self:Remove()
-            end
-        end
-    elseif type(inputPressed) == "string" and inputPressed then
-        if inputPressed == "x" and self.canskip and not self.instant then
-            self:skip()
-        end
-
-        if inputPressed == "z" and self.T_STATE == STATE_PAGE_END then
             self.page = self.page + 1
             self:Reset()
             if self.page > #self.text then
@@ -678,7 +662,7 @@ function typers:SetxCharSpacing(spacing)
     self.xchar_spacing = spacing
 end
 
--- Y间距
+-- 设置Y间距
 function typers:SetyCharSpacing(spacing)
     self.ychar_spacing = spacing
 end
@@ -691,6 +675,7 @@ function typers:Reset()
     self.alpha = 1
     self:SetColor(1, 1, 1)
     self.time = self.sleep
+    self.speed = self.sleep
     self.index = 1
     self.qie = 1
     self.T_STATE = STATE_TYPING
@@ -701,14 +686,12 @@ end
 
 -- 跳过
 function typers:skip(number)
-    -- 检查是否已经结束，避免无效操作
     if self.T_STATE == STATE_PAGE_END or self.T_STATE == STATE_FINISHED then
         return
     end
 
     if type(number) == "number" and number > 0 then
-        -- 设置跳过单元数
-        self.skipUnitsRemaining = number -- 记录需要快速处理的char
+        self.skipUnitsRemaining = number
         self.instant = true
         self.canskip = false
     else
@@ -725,6 +708,7 @@ function typers:NextPage()
     end
 end
 
+-- 设置文本
 function typers:SetText(text, skip)
     self.text = type(text) == "table" and text or {text}
     self:Reset()
@@ -734,7 +718,7 @@ function typers:SetText(text, skip)
     end
 end
 
--- 是否隐藏
+-- 隐藏/显示
 function typers:Hide(is)
     self.hide = is and true or false
 end
@@ -753,6 +737,5 @@ function typers:Remove()
         end
     end
 end
--------- end -------------++
 
 return typers

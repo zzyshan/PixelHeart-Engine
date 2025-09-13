@@ -10,7 +10,7 @@ local ui = {
     hpname = Sprites.New("ui/HP.png", {255, 410}, 1),
     maxhp = Sprites.New("px.png", {275, 410}, 1, {g = 0, b = 0}),
     hp = Sprites.New("px.png", {275, 410}, 1, {b = 0}),
-    hptext = typer.New("[char_spacing:0]" .. Player.Hp .. " / " .. Player.maxhp, {275, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
+    hptext = typer.New("[skip][char_spacing:0]" .. Player.Hp .. " / " .. Player.maxhp, {275, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
     
     State = {"fight", "act", "item", "mercy"},
     Stateindex = 1,

@@ -13,12 +13,12 @@ battle = {
     nextwave = Encounter.wave,
     wave = nil,
     waveindex = 1,
-    Playerload = Encounter.Player,
+    load = Encounter.load,
     EnteringState = Encounter.EnteringState,
     HandleActions = Encounter.HandleActions,
     HandleItems = Encounter.HandleItems,
     DefenseEnding = Encounter.DefenseEnding,
-    canflee = Encounter.canflee or true,
+    canflee = Encounter.canflee,
     Escapeprobability = Encounter.Escapeprobability or 0.5,
     nextscene = Encounter.scene,
     enemies = Encounter.enemies or {},
@@ -27,7 +27,6 @@ battle = {
     allexp = 0,
     allgold = 0
 }
-package.loaded[Encounter] = nil
 
 for _, enemie in ipairs(battle.enemies) do
     battle.allexp = battle.allexp + (enemie.exp or 0)
@@ -67,12 +66,25 @@ function BattleDialogue(texts, targetState, isskip)
     end
 end
 
+function battle.DeleteEnemie(index)
+    if battle.enemies[index] then
+        table.remove(battle.enemies, index)
+    else
+        print("en.Not found enemie")
+    end
+end
+
+function battle.AddEnemie(table)
+    table.insert(battle.enemies, table)
+    print("en.Monster added")
+end
+
 function battle_init.load()
     scenes.Settype("battle")
     save.load(1)
     Player.init()
-    if battle.Playerload then
-        battle.Playerload()
+    if battle.load then
+        battle.load()
     end
     battle.main_arena = Arenas.new({320,320}, 565, 130, 0, "rectangle", "plus")
     battle.main_arena.isactive = false
@@ -93,6 +105,7 @@ function battle_init.draw()
 end
 
 function battle_init.over()
+    package.loaded[Encounter] = nil
     package.loaded[Arenas] = nil
     package.loaded[ui] = nil
     Sprites.clear()

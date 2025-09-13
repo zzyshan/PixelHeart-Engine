@@ -10,7 +10,7 @@ function love.conf(t)
     t.audio.mic = true                 -- 在 Android 上请求并使用麦克风功能（布尔值）
     t.audio.mixwithsystem = true        -- 打开 LOVE 时保持后台音乐播放（布尔值，仅限 iOS 和 Android）
 
-    t.window.title = "mygame"        -- 窗口标题（字符串）
+    t.window.title = "PixelHeart Engine"        -- 窗口标题（字符串）
     t.window.icon = "soul.png"          -- 用作窗口图标的图像文件路径（字符串）
     t.window.width = 640                -- 窗口宽度（数字）
     t.window.height = 480               -- 窗口高度（数字）
