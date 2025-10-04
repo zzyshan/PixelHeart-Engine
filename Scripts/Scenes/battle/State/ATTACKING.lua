@@ -9,26 +9,6 @@ local AA = ATTACKING
 -- 用于管理所有跳跃文字的列表
 local PopUp = {}
 
------------ 临时函数 ------------
-local function Removesprite()
-    for _, sprite in pairs(ATTACKING.sprites) do
-        if sprite and sprite.Remove then
-            sprite:Remove()
-        end
-    end
-    ATTACKING.sprites = {}
-end
-
-local function Createhp(position, hp, isOffset)
-    local sprite = Sprites.New("px.png", position or {320, 180}, 1, {xscale = mathlib.clamp(hp * 1.21, 1 * 1.21, 99 * 1.21), yscale = 20})
-    sprite:SetPivot(0, 0.5)
-    if isOffset then
-        sprite.x = position[1] - sprite.scale.x / 2
-    end
-    return sprite
-end
----------- end -----------------
-
 --------- 共用函数 -------------
 
 --- 创建一个跳跃的伤害/数值文本
@@ -36,8 +16,9 @@ function ATTACKING.PopUpText(text, position, settings)
     local settings = settings or {}
     local default_settings = {
         font = "Hachicro.ttf",
-        g = 0,
-        b = 0,
+        r = settings.r or 1,
+        g = settings.g or 0,
+        b = settings.b or 0,
         size = 30,
         -- 默认物理参数
         Initialforce = settings.Initialforce or 6,
@@ -59,10 +40,41 @@ function ATTACKING.PopUpText(text, position, settings)
     return text_obj
 end
 
+function ATTACKING.Removesprite()
+    for _, sprite in pairs(ATTACKING.sprites) do
+        if sprite then
+            sprite:Remove()
+        end
+    end
+    ATTACKING.sprites = {}
+end
+
+function ATTACKING.Createhp(position, hp, isOffset)
+    local sprite = Sprites.New("px.png", position or {320, 180}, 1, {xscale = mathlib.clamp(hp * 1.21, 1 * 1.21, 99 * 1.21), yscale = 20})
+    sprite:SetPivot(0, 0.5)
+    if isOffset then
+        sprite.x = position[1] - sprite.scale.x / 2
+    end
+    return sprite
+end
+
+function ATTACKING.slice(position)
+    Audio.PlaySound("snd_slice.wav")
+    AA.sprites.slice = Sprites.New("ui/Player Attack/spr_slice_o_0.png", position or {320, 180}, 3)
+    local sprites = {}
+    for i = 0, 5 do
+        local sprite = "ui/Player Attack/spr_slice_o_" .. i .. ".png"
+        table.insert(sprites, sprite)
+    end
+    AA.sprites.slice:SetAnimation(sprites, 0.15)
+    AA.sprites.slice.anim.animmode = "oneshotempty"
+    
+    return AA.sprites.slice
+end
 
 --- 默认的伤害处理逻辑
 function ATTACKING.Damage()
-    local enemie = ui.Selectedenemie
+    local enemie = ui.Selectedenemie.data
     enemie.position = enemie.position or {320, 180}
     if not enemie then return end
 
@@ -75,9 +87,9 @@ function ATTACKING.Damage()
     enemie.maxhp = enemie.maxhp or enemie.hp
 
     -- 创建血条
-    AA.sprites.maxhp = Createhp(enemie.position, enemie.maxhp, true)
+    AA.sprites.maxhp = AA.Createhp(enemie.position, enemie.maxhp, true)
     AA.sprites.maxhp:SetColor(74 / 255, 76 / 255, 76 / 255)
-    AA.sprites.hp = Createhp({AA.sprites.maxhp.x, AA.sprites.maxhp.y}, enemie.hp)
+    AA.sprites.hp = AA.Createhp({AA.sprites.maxhp.x, AA.sprites.maxhp.y}, enemie.hp)
     AA.sprites.hp:SetColor(0, 1, 0)
 
     -- 创建跳跃伤害数字
@@ -104,6 +116,7 @@ function ATTACKING.init()
     ATTACKING.over = false
     ATTACKING.DamageCalculation = false
     ATTACKING.customAttack = false
+    ATTACKING.isslice = false
 
     ATTACKING.sprites.target = Sprites.New("ui/spr_target_0.png", {320, 320}, 3)
     ATTACKING.sprites.targetchoice = Sprites.New("ui/spr_targetchoice_0.png", {320, 320}, 3)
@@ -116,20 +129,20 @@ function ATTACKING.init()
 end
 
 function ATTACKING.update(ui)
-    local enemie = ui.Selectedenemie
+    local enemie = ui.Selectedenemie.data
 
     if AA.sprites.targetchoice and not AA.isattack then
         if randomise == 0 then
             AA.sprites.targetchoice.x = AA.sprites.targetchoice.x - 4.5
             if AA.sprites.targetchoice.x <= 35 then
-                Removesprite()
+                AA.Removesprite()
                 STATE("ACTIONSELECT")
                 return 
             end
         elseif randomise == 1 then
             AA.sprites.targetchoice.x = AA.sprites.targetchoice.x + 4.5
             if AA.sprites.targetchoice.x >= 605 then
-                Removesprite()
+                AA.Removesprite()
                 STATE("ACTIONSELECT")
                 return 
             end
@@ -137,26 +150,22 @@ function ATTACKING.update(ui)
 
         if Keyboard.getState("z") == 1 then
             AA.isattack = true
-            Audio.PlaySound("snd_slice.wav")
             AA.sprites.targetchoice:SetAnimation({"ui/spr_targetchoice_0.png", "ui/spr_targetchoice_1.png"}, 0.15)
-            AA.sprites.slice = Sprites.New("ui/Player Attack/spr_slice_o_0.png", enemie.position or {320, 180}, 3)
-            local sprites = {}
-            for i = 0, 5 do
-                local sprite = "ui/Player Attack/spr_slice_o_" .. i .. ".png"
-                table.insert(sprites, sprite)
-            end
-            AA.sprites.slice:SetAnimation(sprites, 0.15)
-            AA.sprites.slice.anim.animmode = "oneshotempty"
         end
     end
 
-    -- 处理攻击动画结束后的逻辑
-    if AA.sprites.slice and AA.sprites.slice.remove then
+    -- 处理攻击后的动画逻辑
+    if AA.isattack then
         -- 检查敌人是否有自定义攻击函数
         local hasCustomAttack = enemie.customAttack and type(enemie.customAttack) == "function"
 
         if not hasCustomAttack then
-            if not AA.DamageCalculation then
+            if not AA.isslice then
+                AA.slice(enemie.position)
+                AA.isslice = true
+            end
+            
+            if not AA.DamageCalculation and AA.sprites.slice and AA.sprites.slice.remove then
                 Audio.PlaySound("snd_damage.wav")
                 ATTACKING.Damage()
             end
@@ -177,31 +186,45 @@ function ATTACKING.update(ui)
                 if not isEnemyAlive(enemie) then
                     for i = #battle.enemies, 1, -1 do
                         local EM = battle.enemies[i]
-                        if EM == enemie then
+                        if EM.data == enemie then
+                            for _, sprite in pairs(EM.data.sprites) do
+                                sprite:StopAnimation()
+                            end
                             table.remove(battle.enemies, i)
                             battle.allenemy = battle.allenemy - 1
-                            local dust = Sprites.New("killed.png", enemie.position, 1)
-                        end
-                        for _, sprite in pairs(EM) do
-                            
+                            local dust = Sprites.New("killed.png", enemie.position or {320, 180}, 1)
                         end
                     end
                 end
-                Removesprite()
+                
+                AA.Removesprite()
                 AA.overtime = 0
-                STATE("DEFENDING")
+                
+                if #battle.enemies > 0 then
+                    STATE("DEFENDING")
+                else
+                    STATE("NONE")
+                    local tab = battle.wintext or {"[char_spacing:0]* YOU WEN!\n* You earned " .. battle.allexp .. " XP and " .. battle.allgold .. " gold."}
+                    tab[#tab + 1] = "[skip][nextpage]"
+                    local t = typer.New(tab, {60, 270}, 3, {voice = "uifont.wav"})
+                    t.mode = "manual"
+                    t.over = function()
+                        STATE("WIN")
+                    end
+                end
             end
         end
     end
     
     if AA.customAttack then
-        local customAttackFinished = enemie.customAttack(enemie, ATTACKING)
+        AA.overtime = AA.overtime + 1
+        local customAttackFinished, state = enemie.customAttack(AA.overtime, ATTACKING)
 
         -- 如果自定义攻击函数返回 true，则认为攻击结束
         if customAttackFinished then
-            Removesprite()
+            AA.Removesprite()
             ATTACKING.overtime = 0
-            STATE("ACTIONSELECT")
+            STATE(state or "ACTIONSELECT")
         end
     end
 

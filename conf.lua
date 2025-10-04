@@ -26,7 +26,7 @@ function love.conf(t)
     t.window.stencil = nil              -- 模板缓冲区中每个样本的位数
     t.window.display = 1                -- 显示窗口的监视器索引（数字）
     t.window.highdpi = false             -- 在Retina显示器上启用高 DPI 模式（布尔值）
-    t.window.usedpiscale = false         -- 当 highdpi 设置为 true 时启用自动 DPI 缩放（布尔值）
+    t.window.usedpiscale = true         -- 当 highdpi 设置为 true 时启用自动 DPI 缩放（布尔值）
     t.window.x = nil                    -- 窗口在指定显示中的 x 坐标位置（数字）
     t.window.y = nil                    -- 窗口在指定显示中的 y 坐标位置（数字）
 

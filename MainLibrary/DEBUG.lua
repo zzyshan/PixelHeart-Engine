@@ -1,5 +1,5 @@
 local DEBUG = {
-    switch = true
+    switch = false
 }
 
 function DEBUG.draw()

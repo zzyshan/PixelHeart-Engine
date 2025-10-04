@@ -5,12 +5,13 @@ local ui = {
         item = Sprites.New("ui/ITEM 0.png", {400, 455}, 1),
         mercy = Sprites.New("ui/MERCY 0.png", {555, 455}, 1)
     },
-    name = typer.New("[skip][char_spacing:0]" .. Player.Name, {30, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
-    lv = typer.New("[skip][char_spacing:0]Lv[set_x:171]" .. Player.Lv, {132, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
+    name = typer.Print(Player.Name, {30, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
+    lv = Sprites.New("ui/LV.png", {132, 403}, 1),
+    lv_text = typer.Print(Player.Lv, {171, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
     hpname = Sprites.New("ui/HP.png", {255, 410}, 1),
     maxhp = Sprites.New("px.png", {275, 410}, 1, {g = 0, b = 0}),
     hp = Sprites.New("px.png", {275, 410}, 1, {b = 0}),
-    hptext = typer.New("[skip][char_spacing:0]" .. Player.Hp .. " / " .. Player.maxhp, {275, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
+    hptext = typer.Print(Player.Hp .. " / " .. Player.maxhp, {275, 400}, 1, {font = "Mars Needs Cunnilingus.ttf"}),
     
     State = {"fight", "act", "item", "mercy"},
     Stateindex = 1,
@@ -32,20 +33,22 @@ ui.maxhp:SetPivot(0, 0.5)
 ui.maxhp:SetScale(mathlib.clamp(Player.maxhp * 1.21, 20 * 1.21, 99 * 1.21), 20)
 ui.hp:SetPivot(0, 0.5)
 ui.hp:SetScale(mathlib.clamp(Player.Hp * 1.21, 1 * 1.21, 99 * 1.21), 20)
-ui.hptext.x[1] = ui.hp.x + ui.hp:getWidth() + 30
+ui.lv:SetPivot(0, 0)
+ui.hptext.x = ui.hp.x + ui.hp:getWidth() + 30
 ui.Buttons[ui.newState]:Set("ui/" .. ui.newState:upper() .. " 1.png")
 encounterTyper = typer.New(battle.EncounterText, {54, 270}, 3, {voice = "uifont.wav"})
 encounterTyper:SetScale(28)
 
-ACTIONSELECT = require("Scripts/Scenes/battle/ui/ACTIONSELECT")
-ATTACKING = require("Scripts/Scenes/battle/ui/ATTACKING")
-ACTMENU = require("Scripts/Scenes/battle/ui/ACTMENU")
-ENEMYSELECT = require("Scripts/Scenes/battle/ui/ENEMYSELECT")
-ITEMMENU = require("Scripts/Scenes/battle/ui/ITEMMENU")
-MERCYMENU = require("Scripts/Scenes/battle/ui/MERCYMENU")
-RUNAWAY = require("Scripts/Scenes/battle/ui/RUNAWAY")
-WIN = require("Scripts/Scenes/battle/ui/WIN")
-DEFENDING = require("Scripts/Scenes/battle/ui/DEFENDING")
+ACTIONSELECT = require("Scripts/Scenes/battle/State/ACTIONSELECT")
+ATTACKING = require("Scripts/Scenes/battle/State/ATTACKING")
+ACTMENU = require("Scripts/Scenes/battle/State/ACTMENU")
+ENEMYSELECT = require("Scripts/Scenes/battle/State/ENEMYSELECT")
+ITEMMENU = require("Scripts/Scenes/battle/State/ITEMMENU")
+MERCYMENU = require("Scripts/Scenes/battle/State/MERCYMENU")
+RUNAWAY = require("Scripts/Scenes/battle/State/RUNAWAY")
+WIN = require("Scripts/Scenes/battle/State/WIN")
+DEFENDING = require("Scripts/Scenes/battle/State/DEFENDING")
+ANIMING = require("Scripts/Scenes/battle/State/ANIMING")
 --local pb = Sprites.New("ui/640 480.png", {}, 2.5)
 ---------- 用的函数 --------+---
 function ui.ClearTexts(textList)
@@ -57,30 +60,30 @@ end
 -------------------------------+----
 
 function ui.update(dt)
-    ui.hptext.x[1] = math.max(ui.maxhp.x + ui.maxhp.scale.x + 15, ui.maxhp.x + ui.hp.scale.x + 15)
+    ui.hptext.x = math.max(ui.maxhp.x + ui.maxhp.scale.x + 15, ui.maxhp.x + ui.hp.scale.x + 15)
     ui.hp.scale.x = (Player.Hp / Player.maxhp) * ui.maxhp.scale.x
     ui.maxhp:SetScale(mathlib.clamp(Player.maxhp * 1.21, 1 * 1.21, 99 * 1.21), 20)
 
     if ui.oldname ~= Player.Name then
-        ui.name:SetText("[char_spacing:0]" .. Player.Name, true)
+        ui.name.text = Player.Name
         ui.oldname = Player.Name
     end
     
     if ui.oldlv ~= Player.Lv then
-        ui.lv:SetText("[char_spacing:0]Lv[set_x:171]" .. Player.Lv, true)
+        ui.lv_text.text = Player.Lv
         ui.oldlv = Player.Lv
     end 
     
     if ui.oldhp ~= Player.Hp then
-        ui.hptext:SetText("[char_spacing:0]" .. Player.Hp .. " / " .. Player.maxhp, true)
+        ui.hptext.text = Player.Hp .. " / " .. Player.maxhp
         ui.oldhp = Player.Hp
     end
     
     if ui.oldmaxhp ~= Player.maxhp then
-        ui.hptext:SetText("[char_spacing:0]" .. Player.Hp .. " / " .. Player.maxhp, true)
+        ui.hptext.text = Player.Hp .. " / " .. Player.maxhp
         ui.oldmaxhp = Player.maxhp
     end
-    --------------- 按键状态逻辑 ----------------------
+--------------- 按键状态逻辑 ----------------------
     if ui.oldState ~= ui.newState or battle.oldState ~= battle.State then
         for i = 1, #ui.State do
             local button = ui.State[i]
@@ -99,7 +102,7 @@ function ui.update(dt)
         print("oldbutton: " .. ui.oldState .. "newbutton: " .. ui.newState)
         ui.oldState = ui.newState
     end
-    -------------- end -----------------------------
+-------------- end -----------------------------
     
     if battle.oldState ~= battle.State then
         if battle.State == "ACTIONSELECT" then
@@ -137,7 +140,9 @@ function ui.update(dt)
     elseif battle.State == "WIN" then
         WIN.update(ui)
     elseif battle.State == "DEFENDING" then
-        DEFENDING.update(ui)
+        DEFENDING.update(dt)
+    elseif battle.State == "ANIMING" then
+        ANIMING.update(dt, ui)
     end
 end
 

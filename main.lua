@@ -19,7 +19,6 @@ masks = require("MainLibrary/masks")
 DEBUG = require("MainLibrary/DEBUG")
 
 local gameWidth, gameHeight = 640, 480  -- zh.游戏内部分辨率 en.Game internal resolution
-local gamescale = 1
 local screen_w, screen_h = love.graphics.getDimensions()
 -- zh.计算缩放比例 en.Calculate Scale
 local scaleX = screen_w / gameWidth
@@ -59,7 +58,6 @@ INTERMEDIATE_CANVAS:setFilter("nearest", "nearest")
 global.SetVar("ScreenShaders", {})
 
 function love.load()
-    --Audio.PlayMusic("lovve.ogg",true,0.8)
     save.init() -- 存档初始化
     Player.init()
     if love.system.getOS() == "Android" then
@@ -93,7 +91,7 @@ function love.draw()
     draw_y = math.floor((screen_h - gameHeight * scale) * 0.5 + 0.5)
 
     love.graphics.setCanvas({CANVAS, stencil = true})
-    love.graphics.clear(true, true)
+    love.graphics.clear(true, true, true)
 
     love.graphics.push()
         love.graphics.scale(scale, scale)
@@ -116,10 +114,9 @@ function love.draw()
             Camera.NewCamera:detach()
         end
     love.graphics.pop()
-    
-    love.graphics.setCanvas()
-    
+        
     love.graphics.push()
+        love.graphics.setCanvas()
         love.graphics.translate(draw_x, draw_y)
         love.graphics.setColor(1, 1, 1)
         
@@ -158,6 +155,7 @@ function love.keypressed(key)
     
     if key == "f11" and love.system.getOS() ~= "Android" then
         love.window.setFullscreen(not love.window.getFullscreen())
+        scale = math.min(love.graphics.getWidth() / gameWidth, love.graphics.getHeight() / gameHeight)
     end
     
     if key == "f6" then
@@ -169,7 +167,7 @@ end
 
 function love.resize(w, h)
     Keyboard.updateWindowSize(w, h)
-    if CANVAS:getWidth() < w or CANVAS:getHeight() < h then
+    if CANVAS:getWidth() ~= w or CANVAS:getHeight() ~= h then
         CANVAS = love.graphics.newCanvas(w - draw_x * 2, h - draw_y)
     end
 end

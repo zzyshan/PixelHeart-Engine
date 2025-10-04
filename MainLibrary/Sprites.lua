@@ -74,7 +74,7 @@ local Image_function = {
     end,
     
     SetAnimation = function(sprite, anim, animspeed)
-        sprite.anim.animtime = 1
+        sprite.anim.animtime = animspeed or 1
         sprite.anim.animindex = 1
         sprite.anim.animtable = anim or {}
         sprite.anim.animspeed = animspeed or 1
@@ -267,7 +267,8 @@ function Sprites.New(Spr, position, depth, settings)
         end
     end
     
-    function sprite:draw()        
+    function sprite:draw()
+        love.graphics.push()   
         -- Shader 处理
         local shader = self.shader
         if shader.obj and shader.Enabled then
@@ -309,6 +310,8 @@ function Sprites.New(Spr, position, depth, settings)
         masks.reset()
         love.graphics.setShader()
         love.graphics.setColor(1, 1, 1, 1)
+        
+        love.graphics.pop()
     end
     --------- end ----------------**--*---
     

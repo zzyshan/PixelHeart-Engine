@@ -16,7 +16,7 @@ function MERCYMENU.init()
         table.insert(MERCYMENU.text, fleetext)
     end
     for _, enemie in ipairs(battle.enemies) do
-        if enemie.canspare then
+        if enemie.data.canspare then
             MERCYMENU.text[1]:SetColor(1, 1, 0)
             MERCYMENU.iscanenemie = true
             break
@@ -53,10 +53,11 @@ function MERCYMENU.update(ui)
         if newmercy.state == "spare" then
             if MM.iscanenemie then
                 for i = #battle.enemies, 1, -1 do
-                    local enemie = battle.enemies[i]
+                    local enemie = battle.enemies[i].data
                     if enemie.canspare then
                         for _, sprite in pairs(enemie.sprites or {}) do
                             sprite.alpha = 0.5
+                            sprite:StopAnimation()
                         end
                         table.remove(battle.enemies, i)
                         battle.spareenemie = battle.spareenemie + 1

@@ -1,7 +1,7 @@
 local ACTMENU = {}
 
 function ACTMENU.update(ui)
-    local SE = ui.Selectedenemie
+    local SE = ui.Selectedenemie.data
     local actionCount = #SE.commands  -- 获取行动选项数量
     
     -- 确保有行动选项
@@ -114,16 +114,14 @@ function ACTMENU.update(ui)
             Audio.PlaySound("snd_menu_1.wav")
             Player.sprite.hide = true
             
+            -- 对话
+            STATE("DIALOGRESULT")
             -- 执行选择的行动
-            battle.HandleActions(SE.name, newact, SE)
+            SE.HandleActions(SE.name, newact, SE)
             
             -- 删除文本
             ui.ClearTexts(ui.enemie_text)
-            ui.ClearTexts(ui.enemie_acttext)
-            
-            -- 对话
-            STATE("DIALOGRESULT")
-            
+            ui.ClearTexts(ui.enemie_acttext)     
         -- 取消键（X键）：返回敌人选择
         elseif Keyboard.getState("x") == 1 then  
             -- 清除行动菜单文本

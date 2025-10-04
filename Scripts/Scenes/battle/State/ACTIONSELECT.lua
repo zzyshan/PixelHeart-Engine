@@ -2,6 +2,7 @@ local ACTIONSELECT = {}
 
 local function Createenemie()
     for _, enemie in ipairs(battle.enemies) do
+        local enemie = enemie.data
         local enemiename = typer.New("[skip]* " .. enemie.name, {100, 270 + 32 * (_ - 1)}, 3, {voice = "uifont.wav"})
         
         if enemie.canspare then

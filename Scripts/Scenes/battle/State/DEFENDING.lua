@@ -1,6 +1,6 @@
 local DEFENDING = {}
 
-function DEFENDING.update(ui)
+function DEFENDING.update(dt)
     battle.wave = require("Scripts/Waves/" .. scenes.BATTLE .. "/" .. battle.nextwave)
     if battle.wave then
         if not battle.wave.END then

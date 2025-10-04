@@ -1,6 +1,6 @@
 local encounter = {
-    Text = "[font:SmileySans-Oblique.ttf][font_size:30]* 你遭遇了[wait:0.5]空气?",
-    nextwaves = {"wave_1", "wave_2"},
+    Text = "[font:SmileySans-Oblique.ttf][font_size:30]* 你遭遇了[wait:0.7]空气?",
+    nextwaves = {"wave_2"},
     canflee = false,
     Escapeprobability = 0,
     scene = {"kong"},
@@ -8,42 +8,48 @@ local encounter = {
     wave = "wave_1",
     enemies = {
         {
-            name = "???",
-            hp = 1000,
-            maxdamage = 200,
-            commands = {"Observation"}
+            path_name = "qwq"
         }
-    },
-    
-    load = function()
-        Player.Name = "ZZY"
-        Player.maxhp = 20
-        Player.Hp = 20
-        Player.Lv = 1
-        Player.inventory = {}
-    end,
-    
-    EnteringState = function(new, old)
-    end,
-    
-    HandleActions = function(enemy_name, action, enemy)
-        if enemy_name == "???" then
-            if action == "Observation" then
-                -- battle.DeleteEnemie(1)
-                BattleDialogue("* 你仔细观察的四周[speed:0.3]...[speed:0.05]\n* 似乎没有奇怪的地方")
-            end
-        end
-    end,
-    
-    HandleItems = function(itemID)
-    end,
-    
-    DefenseEnding = function()
-    end
+    }
 }
 
+function encounter.load()
+    Player.Name = "ZZY"
+    Player.maxhp = 20
+    Player.Hp = 20
+    Player.Lv = 1
+    Player.inventory = {
+        {
+            name = "ZZY"
+        }
+    }
+end
+
+function encounter.update(dt)
+    local froggit = battle.GetEnemieData(1)
+    local whimsun = battle.GetEnemieData(2)
+    if froggit and froggit.name == "froggit" then
+        froggit.Swing()
+    end
+    if whimsun and whimsun.name == "whimsun" then
+        whimsun.Swing()
+    end
+end
+
+function encounter.EnteringState(new, old)
+end
+
+function encounter.HandleItems(itemID)
+    if itemID == "ZZY" then
+        BattleDialogue({"[font:SmileySans-Oblique.ttf][font_size:30]* 你吃掉了[color:1,0,0]ZZY[/color]?", "* 吃我是不会增加任何HP的\n* 快停止你这种行为!"})
+    end
+end
+
+function encounter.DefenseEnding()
+end
+
 function OnHit(bullet)
-    Player.Hurt(2, 2, true)
+    Player.Hurt(2, 1, true)
 end
 
 return encounter

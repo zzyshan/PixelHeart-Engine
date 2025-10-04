@@ -10,39 +10,8 @@ local camera_function = {
             camera.shake.timer = camera.shake.timer - dt
         end
         
-        camera.black.sprite.alpha = mathlib.smooth(camera.black.sprite.alpha, camera.black.newalpha, camera.black.speed)
-        camera.black.sprite:MoveTo(320 + camera.x, 240 + camera.y)
-        
-        -- 跟随目标
-        if camera.target then
-            local targetX, targetY = camera.target.x, camera.target.y
-            local screenW, screenH = love.graphics.getDimensions()
-        
-            -- 计算目标位置（考虑边界限制）
-            local desiredX = targetX - screenW / (2 * camera.scale.x)
-            local desiredY = targetY - screenH / (2 * camera.scale.y)
-        
-            -- 应用边界限制
-            if camera.bounds.w > 0 then
-                desiredX = math.max(camera.bounds.x, math.min(desiredX, 
-                    camera.bounds.x + camera.bounds.w - screenW / camera.scale.x))
-            end
-        
-            if camera.bounds.h > 0 then
-                desiredY = math.max(camera.bounds.y, math.min(desiredY, 
-                camera.bounds.y + camera.bounds.h - screenH / camera.scale.y))
-            end
-
-            camera.x = camera.x + (desiredX - camera.x) * camera.smoothness
-            camera.y = camera.y + (desiredY - camera.y) * camera.smoothness
-            
-            if camera.target.xspeed or camera.target.yspeed then
-                local speed = math.sqrt(camera.target.xspeed^2 + camera.target.yspeed^2)
-                camera.smoothness = math.max(0.05, 0.1 - speed * 0.001)
-            else
-                camera.smoothness = 0.1
-            end
-        end
+        camera.cover.sprite.alpha = mathlib.smooth(camera.cover.sprite.alpha, camera.cover.newalpha, camera.cover.speed)
+        camera.cover.sprite:MoveTo(320 + camera.x, 240 + camera.y)
     end,
     Move = function(camera, xspeed, yspeed)
         camera.x = camera.x + xspeed
@@ -59,17 +28,16 @@ local camera_function = {
     SetRotation = function(camera, rot)
         camera.rotation = rot
     end,
-    --跟随目标
-    SetTarget = function(camera, target)
-        camera.target = target
-    end,
     --设置边界
     SetBounds = function(camera, x, y, w, h)
         camera.bounds = {x = x, y = y, w = w, h = h}
     end,
-    Setblackalpha = function(camera, alpha, speed)
-        camera.black.newalpha = alpha
-        camera.black.speed = speed
+    Setcoveralpha = function(camera, alpha, speed)
+        camera.cover.newalpha = alpha
+        camera.cover.speed = speed
+    end,
+    Setcovercolor = function(camera, r, g, b)
+        camera.cover.sprite:SetColor(r, g, b)
     end,
     SetShake = function(camera, power, duration)
         camera.shake.power = power
@@ -87,8 +55,8 @@ local camera_function = {
     
         -- 应用基本变换
         love.graphics.translate(camera.centerX, camera.centerY)
+        love.graphics.rotate(math.rad(camera.rotation))
         love.graphics.scale(camera.scale.x, camera.scale.y)
-        love.graphics.rotate(camera.rotation)
         love.graphics.translate(-camera.x + offsetx - camera.centerX, -camera.y + offsety - camera.centerY)
     end,
     -- 结束相机变换
@@ -115,12 +83,11 @@ function Camera.new()
     camera.centerY = love.graphics.getHeight() / 2
     camera.scale = {x = 1, y = 1}
     camera.rotation = 0
-    camera.target = nil
     camera.bounds = {x = 0, y = 0, w = 640, h = 480}
     camera.shake = {power = 0, timer = 0}
     camera.smoothness = 0.1
-    camera.black = {sprite = Sprites.New("px.png", {}, 1145, {xscale = 1145, yscale = 1145, r = 0, b = 0, g = 0}), speed = 0.05, newalpha = 0}
-    camera.black.sprite.alpha = 0
+    camera.cover = {sprite = Sprites.New("px.png", {}, 1145, {xscale = 1145, yscale = 1145, r = 0, b = 0, g = 0}), speed = 0.05, newalpha = 0}
+    camera.cover.sprite.alpha = 0
     camera.remove = false
     table.insert(Camera.cameras, camera)
     return camera

@@ -1,6 +1,5 @@
 local battle_init = {}
 
-local path = "Scripts/Scenes/Overworld/"
 Encounter = require("Scripts/Waves/" .. scenes.BATTLE .. "/Encounter") -- 这个scenes.BATTLE详见MainLibrary/scenes.lua
 Arenas = require("Scripts/Libraries/Arenas")
 
@@ -12,8 +11,11 @@ battle = {
     nextwaves = Encounter.nextwaves or {},
     nextwave = Encounter.wave,
     wave = nil,
+    nextanim = nil,
+    anim = nil,
     waveindex = 1,
     load = Encounter.load,
+    update = Encounter.update,
     EnteringState = Encounter.EnteringState,
     HandleActions = Encounter.HandleActions,
     HandleItems = Encounter.HandleItems,
@@ -25,18 +27,28 @@ battle = {
     spareenemie = 0,
     allenemy = #Encounter.enemies,
     allexp = 0,
-    allgold = 0
+    allgold = 0,
+    path = "Scripts/Waves/" .. scenes.BATTLE
 }
 
 for _, enemie in ipairs(battle.enemies) do
-    battle.allexp = battle.allexp + (enemie.exp or 0)
-    battle.allgold = battle.allgold + (enemie.gold or 0)
+    enemie.data = require(battle.path .. "/enemies/" .. enemie.path_name)
 end
 
-ui = require("Scripts/Scenes/battle/ui/ui")
+for _, enemie in ipairs(battle.enemies) do
+    battle.allexp = battle.allexp + (enemie.data.exp or 0)
+    battle.allgold = battle.allgold + (enemie.data.gold or 0)
+end
 
-function STATE(sname)
+ui = require("Scripts/Scenes/battle/ui")
+
+function STATE(sname, var)
     if (battle) then
+        if var then
+            for name, var in pairs(var) do
+                battle[name] = var
+            end
+        end
         battle.State = sname
     end
 end
@@ -69,14 +81,27 @@ end
 function battle.DeleteEnemie(index)
     if battle.enemies[index] then
         table.remove(battle.enemies, index)
+        battle.allenemy = battle.allenemy - 1
     else
         print("en.Not found enemie")
     end
 end
 
-function battle.AddEnemie(table)
-    table.insert(battle.enemies, table)
+function battle.AddEnemie(path_name, pos)
+    local pos = pos or #battle.enemies +1
+    local enemie = {
+        path_name = path_name,
+        data = require(battle.path .. "/enemies/" .. path_name)
+    }
+    table.insert(battle.enemies, pos, enemie)
+    battle.allenemy = battle.allenemy + 1
+    
     print("en.Monster added")
+end
+
+function battle.GetEnemieData(index)
+    if not battle.enemies[index] then return end
+    return battle.enemies[index].data
 end
 
 function battle_init.load()
@@ -94,20 +119,19 @@ function battle_init.update(dt)
     typer.allPressed()
     ui.update(dt)
     Arenas.update(dt)
+    if battle.update then
+        battle.update(dt)
+    end
 end
 
 function battle_init.draw()
-    if battle_init.newmap then
-        if battle_init.newmap.draw then
-            battle_init.newmap.draw()
-        end
-    end 
+    
 end
 
 function battle_init.over()
-    package.loaded[Encounter] = nil
-    package.loaded[Arenas] = nil
-    package.loaded[ui] = nil
+    package.loaded["Scripts/Waves/" .. scenes.BATTLE .. "/Encounter"] = nil
+    package.loaded["Scripts/Libraries/Arenas"] = nil
+    package.loaded["Scripts/Scenes/battle/ui"] = nil
     Sprites.clear()
     typer.clear()
 end

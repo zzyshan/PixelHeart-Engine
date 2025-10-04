@@ -15,6 +15,16 @@ local Audio_function = {
     setVolume = function(Audio,volume)
         Audio.bgm:setVolume(math.max(0,math.min(1,volume)))
     end,
+    seek = function(Audio, offset, unit)
+        Audio.bgm:seek(offset, unit)
+    end,
+    tell = function(Audio, unit)
+        return Audio.bgm:tell(unit)
+    end,
+    setEffect = function(Audio, name, enable)
+        local success = Audio.bgm:setEffect(name, enable)
+        return success
+    end,
     setLooping = function(Audio,isLoop)
         Audio.bgm:setLooping(isLoop and true)
     end,

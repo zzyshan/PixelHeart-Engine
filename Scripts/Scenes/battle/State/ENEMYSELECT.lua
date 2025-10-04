@@ -49,7 +49,7 @@ function ENEMYSELECT.update(ui)
                 ui.enemie_text[i].hide = true
             end
             
-            ui.enemie_acttext = CreateMenuact(newenemie.commands, {x=100, y=270})
+            ui.enemie_acttext = CreateMenuact(newenemie.data.commands, {x=100, y=270})
             Audio.PlaySound("snd_menu_1.wav")
             ui.Selectedenemie = battle.enemies[ui.enemieindex] --记录选中的怪物
             STATE("ACTMENU")

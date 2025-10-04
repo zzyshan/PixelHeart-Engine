@@ -6,12 +6,13 @@ function RUNAWAY.update(ui)
         ui.runtime = ui.runtime + 1
     end
     if ui.runtime == 1 then
-        Camera.NewCamera:Setblackalpha(1, 0.05)
+        Camera.NewCamera:Setcovercolor(0, 0, 0)
+        Camera.NewCamera:Setcoveralpha(1, 0.05)
     end
     
     if ui.runtime >= 21 then
         scenes.into(unpack(battle.nextscene))
-        Camera.NewCamera:Setblackalpha(0, 1)
+        Camera.NewCamera:Setcoveralpha(0, 1)
     end
 end
 

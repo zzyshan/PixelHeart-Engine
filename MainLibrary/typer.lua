@@ -1,6 +1,10 @@
-local typers = {}
+local typers = {
+    func = {},
+    Print_func = {}
+}
 
-local mt = { __index = typers }
+local mt = { __index = typers.func }
+local mt2 = { __index = typers.Print_func }
 
 -- 状态常量
 local STATE_IDLE = 0
@@ -53,7 +57,7 @@ end
 
 -- 创建打字机
 function typers.New(text, position, depth, settings)
-    settings = settings or {}
+    local settings = settings or {}
     local self = setmetatable({}, mt)
     
     -- 基本属性
@@ -117,7 +121,7 @@ end
 function typers.allPressed()
     for i = #layers.objects.manual, 1, -1 do
         local obj = layers.objects.manual[i]
-        if not obj.remove and not obj.noGlobal and obj.type == "typer" then
+        if not obj.remove and not obj.noGlobal and obj.Pressed and obj.type == "typer" then
             obj:Pressed()
         end
     end
@@ -150,14 +154,14 @@ end
 function typers.clear()
     for i = #layers.objects.manual, 1, -1 do
         local tpr = layers.objects.manual[i]
-        if not tpr.remove and tpr.type == "typer" then
+        if not tpr.remove and (tpr.type == "typer" or tpr.type == "typer_Print") then
             tpr:Remove()
         end
     end
 end
 
 -- 更新打字机
-function typers:update(dt)
+function typers.func:update(dt)
     -- 确保属性是表
     if type(self.x) ~= "table" then self.x = {self.x} end
     if type(self.y) ~= "table" then self.y = {self.y} end
@@ -175,7 +179,7 @@ function typers:update(dt)
 end
 
 -- 处理即时模式
-function typers:processInstantMode()
+function typers.func:processInstantMode()
     while self.T_STATE ~= STATE_FINISHED and self.instant do
         if self.T_STATE == STATE_PAGE_END then
             self.instant = false
@@ -205,7 +209,7 @@ function typers:processInstantMode()
 end
 
 -- 处理普通模式
-function typers:processNormalMode(dt)
+function typers.func:processNormalMode(dt)
     if self.T_STATE ~= STATE_PAGE_END then
         self.time = self.time + dt
         while self.time >= self.speed do
@@ -220,7 +224,7 @@ function typers:processNormalMode(dt)
 end
 
 -- 处理下一个字符
-function typers:ProcessNextChar()
+function typers.func:ProcessNextChar()
     local currentText = self.text[self.page]
     
     -- 检查是否到达文本末尾
@@ -265,7 +269,7 @@ function typers:ProcessNextChar()
 end
 
 -- 处理换行
-function typers:handleNewline(intervalY)
+function typers.func:handleNewline(intervalY)
     self.char_x = 0
     self.char_y = self.char_y + intervalY + self.ychar_spacing
     self.index = self.index + 1 -- 换行符只占一个字节
@@ -282,7 +286,7 @@ function typers:handleNewline(intervalY)
 end
 
 -- 处理空格
-function typers:handleSpace(intervalX)
+function typers.func:handleSpace(intervalX)
     self.index = self.index + 1
     self.char_x = self.char_x + intervalX
     
@@ -298,27 +302,30 @@ function typers:handleSpace(intervalX)
 end
 
 -- 处理标签
-function typers:handleTag(currentText)
+function typers.func:handleTag(currentText)
     local tagStart = self.index
     local tagEnd = currentText:find("]", tagStart)
+    local stopaddindex
     if not tagEnd then
         self.index = self.index + 1
         return
     end
     
     local tagContent = currentText:sub(tagStart + 1, tagEnd - 1)
-    local _, _, head, body = tagContent:find("^([%w_]+):?(.*)$")
+    local _, _, head, body = tagContent:find("^([%w/_]+):?(.*)$")
     
     if head then
         local attached = body ~= ""
-        self:processTag(head, body, attached)
+        stopaddindex = self:processTag(head, body, attached)
     end
 
+    if stopaddindex then return end
+    --self.index = self.index + #tagContent + 2
     self.index = tagEnd + 1
 end
 
 -- 处理跳过模式
-function typers:handleSkipMode(currentText, delta, intervalX)
+function typers.func:handleSkipMode(currentText, delta, intervalX)
     self.index = self.index + delta
     self.char_x = self.char_x + intervalX + self.xchar_spacing
 
@@ -336,7 +343,7 @@ function typers:handleSkipMode(currentText, delta, intervalX)
 end
 
 -- 标签处理方法
-function typers:processTag(head, body, attached)
+function typers.func:processTag(head, body, attached)
     head = head:lower()  -- 统一转换为小写
     
     if attached then
@@ -401,6 +408,8 @@ function typers:processTag(head, body, attached)
             self.char_y = 0
             self.x[self.qie] = self.x[self.qie - 1]
             self.y[self.qie] = self.y[self.qie - 1] + tonumber(body)
+        elseif head == "mode" then
+            self.mode = body
         elseif head == "effect" then
             local effect, strength = body:match("^%s*([%w_]+)%s*,?%s*(%d*%.?%d*)%s*$")
             if not effect then
@@ -421,6 +430,7 @@ function typers:processTag(head, body, attached)
                     table.insert(self.voice, voice)
                 end
             end
+            -- call: [call:funcname:params1,params2...]
         elseif head == "call" then
             local funcname, params = body:match("^([%w_]+)%s*:%s*(.*)$")
             if not funcname then
@@ -464,14 +474,14 @@ function typers:processTag(head, body, attached)
             if self.page < #self.text then
                 self.page = self.page + 1
                 self:Reset()
+                return true
             else
-                if self.over then
-                    self.over()
-                end
                 self:Remove()
             end
         elseif head == "skip" then
             self:skip()
+        elseif head == "/mode" then
+            self.mode = nil
         elseif head == "effect_off" then
             self.effect.name = "none"
             self.effect.effectstrength = 1
@@ -479,12 +489,14 @@ function typers:processTag(head, body, attached)
             self:SetColor(1, 1, 1)
         elseif head == "/alpha" then
             self:SetAlpha(1)
+        else
+            return 
         end
     end
 end
 
 -- 添加字符
-function typers:addChar(char)
+function typers.func:addChar(char)
     if not self.instant and char ~= " " and #self.voice > 0 then
         Audio.PlaySound("Voices/"..self.voice[math.random(#self.voice)], false, 1)
     end
@@ -527,9 +539,11 @@ function typers:addChar(char)
 end
 
 -- 绘制
-function typers:draw()
+function typers.func:draw()
     for _, char in ipairs(self.char) do
         if not self.remove and not self.hide and char.intext then
+            love.graphics.push()
+            
             char.x[1] = self.x[char.qie] + char.x[2]
             char.y[1] = self.y[char.qie] + char.y[2]
             char.angle = self.angle[char.qie]
@@ -549,6 +563,8 @@ function typers:draw()
                 char.y[1] + char.effect.offsety + char.offset.y,
                 math.rad(char.angle)
             )
+            
+            love.graphics.pop()
         end
     end
 
@@ -556,7 +572,7 @@ function typers:draw()
 end
 
 -- 应用效果
-function typers:applyEffect(char)
+function typers.func:applyEffect(char)
     if char.effect.name == "shake" then
         char.effect.offsetx = char.effect.effectstrength * math.random(-1, 1)
         char.effect.offsety = char.effect.effectstrength * math.random(-1, 1)
@@ -568,7 +584,7 @@ function typers:applyEffect(char)
 end
 
 -- 输入处理
-function typers:Pressed()
+function typers.func:Pressed()
     if self.mode ~= "manual" then return end
     
     local inputPressed = false
@@ -579,24 +595,23 @@ function typers:Pressed()
             inputPressed = "z"
         end
     elseif self.control == "mouse" then
-        inputPressed = GetmouseState() == 1
+        inputPressed = Keyboard.getMouseState()
     elseif self.control == "touch" then
-        inputPressed = GettouchState() == 1
+        inputPressed = Keyboard.isTouching()
     end
 
-    if inputPressed then
+    if inputPressed ~= "z" and inputPressed then
         if self.canskip and not self.instant then
             self:skip()
         end
+    end
 
+    if inputPressed == "z" and inputPressed then
         if self.T_STATE == STATE_PAGE_END then
             self.page = self.page + 1
             self:Reset()
             if self.page > #self.text then
                 self.T_STATE = STATE_FINISHED
-                if self.over then
-                    self.over()
-                end
                 self:Remove()
             end
         end
@@ -604,7 +619,7 @@ function typers:Pressed()
 end
 
 -- 获取打字机宽度和最大高度(只限一行,问题很多,目前不建议使用)
-function typers:GetLettersSize()
+function typers.func:GetLettersSize()
     local width, maxheight = 0, 0
     
     for _, char in ipairs(self.char) do
@@ -616,7 +631,7 @@ function typers:GetLettersSize()
 end
 
 -- 设置颜色
-function typers:SetColor(r, g, b, all)
+function typers.func:SetColor(r, g, b, all)
     if all then
         for _, char in ipairs(self.char) do
             char.color.r = r
@@ -630,12 +645,12 @@ function typers:SetColor(r, g, b, all)
 end
 
 -- 设置透明度
-function typers:SetAlpha(a)
+function typers.func:SetAlpha(a)
     self.alpha = a
 end
 
 -- 设置字体
-function typers:SetFont(font)
+function typers.func:SetFont(font)
     if not font then return end
     local fontPath = "Sprites/Fonts/"..font
     if not fontCache[font] and love.filesystem.getInfo(fontPath) then
@@ -646,29 +661,29 @@ function typers:SetFont(font)
 end
 
 -- 设置大小
-function typers:SetScale(size)
+function typers.func:SetScale(size)
     self.size = size
     fontCache[self.font] = love.graphics.newFont("Sprites/Fonts/" .. self.font, self.size)
     fontCache[self.font]:setFilter("nearest", "nearest")
 end
 
 -- 设置音效
-function typers:SetVoice(voice)
+function typers.func:SetVoice(voice)
     self.voice = type(voice) == "table" and voice or {voice}
 end
 
 -- 设置X间距
-function typers:SetxCharSpacing(spacing)
+function typers.func:SetxCharSpacing(spacing)
     self.xchar_spacing = spacing
 end
 
 -- 设置Y间距
-function typers:SetyCharSpacing(spacing)
+function typers.func:SetyCharSpacing(spacing)
     self.ychar_spacing = spacing
 end
 
 -- 重置状态
-function typers:Reset()
+function typers.func:Reset()
     self.char = {}
     self.char_x = 0
     self.char_y = 0
@@ -685,7 +700,7 @@ function typers:Reset()
 end
 
 -- 跳过
-function typers:skip(number)
+function typers.func:skip(number)
     if self.T_STATE == STATE_PAGE_END or self.T_STATE == STATE_FINISHED then
         return
     end
@@ -701,7 +716,7 @@ function typers:skip(number)
 end
 
 -- 下一页
-function typers:NextPage()
+function typers.func:NextPage()
     if self.page < #self.text then
         self.page = self.page + 1
         self:Reset()
@@ -709,7 +724,7 @@ function typers:NextPage()
 end
 
 -- 设置文本
-function typers:SetText(text, skip)
+function typers.func:SetText(text, skip)
     self.text = type(text) == "table" and text or {text}
     self:Reset()
     self.page = 1
@@ -719,17 +734,21 @@ function typers:SetText(text, skip)
 end
 
 -- 隐藏/显示
-function typers:Hide(is)
+function typers.func:Hide(is)
     self.hide = is and true or false
 end
 
 -- 删除
-function typers:Remove()
+function typers.func:Remove()
     self.remove = true
     if self.box then
         self.box:Remove()
         self.box = nil
     end
+    if self.over then
+        self.over()
+    end
+    
     for i = #layers.objects.manual, 1, -1 do
         if layers.objects.manual[i] == self then
             table.remove(layers.objects.manual, i)
@@ -737,5 +756,82 @@ function typers:Remove()
         end
     end
 end
+
+--------- typer Print ------------
+
+function typers.Print(text, position, depth, settings)
+    local settings = settings or {}
+    local self = setmetatable({}, mt2)
+    
+    -- 基本属性
+    self.text = text
+    self.x = position[1] or 320
+    self.y = position[2] or 240
+    self.size = settings.size or 24
+    self.color = {r = settings.r or 1, g = settings.g or 1, b = settings.b or 1}
+    self.alpha = settings.alpha or 1
+    self.font = settings.font or "Determination.ttf"
+    self.depth = depth or 0
+    self.char = {}
+    self.type = "typer_Print"
+    self.offset = {x = 0, y = 0}
+    self.Createtime = love.timer.getTime()
+    
+    -- 控制属性
+    self.noGlobal = nil
+    self.remove = false
+    self.hide = false
+    
+    loadFont(self.font, self.size)
+    
+    table.insert(layers.objects.manual, self)
+    return self
+end
+
+function typers.Print_func:update(dt)
+end
+
+function typers.Print_func:draw()
+    if not self.remove and not self.hide then
+        love.graphics.push()
+        
+        local font = fontCache[self.font]
+        font:setFilter("nearest", "nearest")
+        
+        love.graphics.setFont(font, self.size)
+        
+        -- 绘制字符
+        love.graphics.setColor(
+            self.color.r,
+            self.color.g,
+            self.color.b,
+            self.color.a
+        )
+        love.graphics.print(
+            self.text,
+            self.x + self.offset.x,
+            self.y + self.offset.y
+        )
+        
+        love.graphics.pop()
+    end
+end
+
+function typers.Print_func:Remove()
+    self.remove = true
+
+    if self.over then
+        self.over()
+    end
+    
+    for i = #layers.objects.manual, 1, -1 do
+        if layers.objects.manual[i] == self then
+            table.remove(layers.objects.manual, i)
+            break
+        end
+    end
+end
+
+---------- end ----------------
 
 return typers
