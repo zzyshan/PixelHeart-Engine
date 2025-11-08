@@ -133,14 +133,14 @@ function ATTACKING.update(ui)
 
     if AA.sprites.targetchoice and not AA.isattack then
         if randomise == 0 then
-            AA.sprites.targetchoice.x = AA.sprites.targetchoice.x - 4.5
+            AA.sprites.targetchoice.x = AA.sprites.targetchoice.x - 5
             if AA.sprites.targetchoice.x <= 35 then
                 AA.Removesprite()
                 STATE("ACTIONSELECT")
                 return 
             end
         elseif randomise == 1 then
-            AA.sprites.targetchoice.x = AA.sprites.targetchoice.x + 4.5
+            AA.sprites.targetchoice.x = AA.sprites.targetchoice.x + 5
             if AA.sprites.targetchoice.x >= 605 then
                 AA.Removesprite()
                 STATE("ACTIONSELECT")

@@ -5,11 +5,11 @@ local scenes = {
 
 function scenes.Load(scenename, var)
     local scene
+    scenes.var = var or {}
     if scenename == "Overworld" or scenename == "battle" then
         local path = "Scripts/Scenes/"..scenename.."/"..scenename.."_init"
         package.loaded[path] = nil--清理缓存
         
-        scenes.var = var or {}
         scene = require(path)
     else
         local path = "Scripts/Scenes/"..scenename

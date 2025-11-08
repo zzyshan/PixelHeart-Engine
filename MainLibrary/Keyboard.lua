@@ -1,20 +1,14 @@
-local Keyboard = {
+local keyboard = {
     keys = {},       -- 存储所有键盘按键状态
     mouse = {       -- 鼠标状态
         state = 0,
         pressed = false,
-        previous = false,
-        isSet = false
+        previous = false
     },
     touch = {
         touches = {}, -- 存储所有触摸点
         anyTouch = false,-- 是否有任意触摸点按下
-        touchCount = 0,-- 当前触摸点数量
-        gameWidth = 640,
-        gameHeight = 480,
-        scale = 1,
-        offsetX = 0,
-        offsetY = 0
+        touchCount = 0-- 当前触摸点数量
     }
 }
 
@@ -51,141 +45,117 @@ end
 
 -- 初始化所有按键状态
 for _, def in ipairs(keyDefinitions) do
-    Keyboard.keys[def.id] = {
+    keyboard.keys[def.id] = {
         state = 0,
         pressed = false,
-        previous = false,
-        isSet = false
+        previous = false
     }
 end
 
 -- 获取按键状态
-function Keyboard.getState(key)
-    for _, keys in ipairs({key}) do
-        local keyObj = Keyboard.keys[keys]
-        return keyObj.state
-    end
+function keyboard.getState(key)
+    local keyObj = keyboard.keys[key]
+    return keyObj.state
 end
 
--- 设置按键状态（手动覆盖）
-function Keyboard.setState(key, state)
-    local keyObj = Keyboard.keys[key]
-    if keyObj then
-        keyObj.isSet = true
-        keyObj.time = love.timer.getTime()
-        keyObj.state = state
+function keyboard.isDown(keys)
+    for _, key in ipairs({keys}) do
+        local keyObj = keyboard.keys[key]
+        if keyObj.state > 0 then
+            return true
+        end
     end
+    
+    return false
 end
 
--- 恢复自动检测状态
-function Keyboard.restore(key)
-    local keyObj = Keyboard.keys[key]
-    if keyObj then
-        keyObj.isSet = false
+---------- 按键的虚拟化处理 ---------
+keyboard._keyboardisDown = love.keyboard.isDown
+
+-- 虚拟按键
+keyboard.virtualkeys = {}
+
+function love.keyboard.isDown(key)
+    -- 优先处理虚拟按键
+    if keyboard.virtualkeys[key] then
+        return true
     end
+    
+    return keyboard._keyboardisDown(key)
 end
+
+function keyboard.SetVirtualKey(key, state)
+    keyboard.virtualkeys[key] = state
+end
+---------- end ------------------
 
 -- 获取鼠标状态
-function Keyboard.getMouseState()
-    return Keyboard.mouse.state
+function keyboard.getMouseState()
+    return keyboard.mouse.state
 end
 
 -- 获取触摸点数量
-function Keyboard.getTouchCount()
-    return Keyboard.touch.touchCount
+function keyboard.getTouchCount()
+    return keyboard.touch.touchCount
 end
 
 -- 检查是否有触摸
-function Keyboard.isTouching()
-    return Keyboard.touch.anyTouch
+function keyboard.isTouching()
+    return keyboard.touch.anyTouch
 end
 
 -- 获取特定触摸点信息
-function Keyboard.getTouch(id)
-    return Keyboard.touch.touches[id]
+function keyboard.getTouch(id)
+    return keyboard.touch.touches[id]
 end
 
 -- 获取所有触摸点
-function Keyboard.getAllTouches()
-    return Keyboard.touch.touches
-end
-
--- 更新窗口尺寸信息
-function Keyboard.updateWindowSize(windowWidth, windowHeight)
-    local touch = Keyboard.touch
-    touch.scale = math.min(windowWidth / touch.gameWidth, windowHeight / touch.gameHeight)
-    touch.offsetX = math.floor((windowWidth - touch.gameWidth * touch.scale) / 2)
-    touch.offsetY = math.floor((windowHeight - touch.gameHeight * touch.scale) / 2)
-end
-
--- 转换触摸坐标到游戏坐标系
-function Keyboard.transformTouch(x, y)
-    local touch = Keyboard.touch
-    -- 1. 减去黑边偏移
-    x = x - touch.offsetX
-    y = y - touch.offsetY
-    -- 2. 除以缩放比例
-    x = x / touch.scale
-    y = y / touch.scale
-    return x, y
+function keyboard.getAllTouches()
+    return keyboard.touch.touches
 end
 
 -- 更新输入状态
-function Keyboard.update(dt)
+function keyboard.update(dt)
     -- 更新键盘状态
-    for id, key in pairs(Keyboard.keys) do
-        if not key.isSet then
-            key.pressed = love.keyboard.isDown(id)
-            
-            -- 状态转换逻辑
-            if key.pressed == key.previous then
-                key.state = key.pressed and 2 or 0
-            else
-                key.state = key.pressed and 1 or -1
-                key.previous = key.pressed
-            end
+    for id, key in pairs(keyboard.keys) do
+        key.pressed = love.keyboard.isDown(id)
+        
+        -- 状态转换逻辑
+        if key.pressed == key.previous then
+            key.state = key.pressed and 2 or 0
         else
-            if key.time then
-                local delay = 0.5
-                if love.timer.getTime() > key.time + delay then
-                    Keyboard.restore(id)
-                end
-            end
+            key.state = key.pressed and 1 or -1
+            key.previous = key.pressed
         end
     end
     
     -- 更新鼠标状态
-    local mouse = Keyboard.mouse
-    if not mouse.isSet then
-        if mouse.pressed == mouse.previous then
-            mouse.state = mouse.pressed and 2 or 0
-        else
-            mouse.state = mouse.pressed and 1 or -1
-            mouse.previous = mouse.pressed
-        end
+    local mouse = keyboard.mouse
+    if mouse.pressed == mouse.previous then
+        mouse.state = mouse.pressed and 2 or 0
+    else
+        mouse.state = mouse.pressed and 1 or -1
+        mouse.previous = mouse.pressed
     end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    Keyboard.mouse.pressed = (button == 1)
+    keyboard.mouse.pressed = (button == 1)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
-    Keyboard.mouse.pressed = not (button == 1)
+    keyboard.mouse.pressed = not (button == 1)
 end
 
 -- 触摸事件回调
 -- 触摸按下
 function love.touchpressed(id, x, y, dx, dy, pressure)
-    local touch = Keyboard.touch
-    local tx, ty = Keyboard.transformTouch(x, y)
+    local touch = keyboard.touch
     
     touch.touches[id] = {
         id = id,
-        x = tx,  -- 存储转换后的坐标
-        y = ty,
-        rawX = x, -- 原始坐标
-        rawY = y,
+        x = x,
+        y = y,
         startX = tx,
         startY = ty,
         pressure = pressure,
@@ -197,26 +167,20 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
 end
 
 function love.touchmoved(id, x, y, dx, dy, pressure)
-    if Keyboard.touch.touches[id] then
-        local tx, ty = Keyboard.transformTouch(x, y)
-        Keyboard.touch.touches[id].x = tx
-        Keyboard.touch.touches[id].y = ty
-        Keyboard.touch.touches[id].rawX = x
-        Keyboard.touch.touches[id].rawY = y
-        Keyboard.touch.touches[id].state = 2
-        Keyboard.touch.touches[id].pressure = pressure
+    if keyboard.touch.touches[id] then
+        keyboard.touch.touches[id].x = x
+        keyboard.touch.touches[id].y = y
+        keyboard.touch.touches[id].state = 2
+        keyboard.touch.touches[id].pressure = pressure
     end
 end
 
 function love.touchreleased(id, x, y, dx, dy, pressure)
-    local touch = Keyboard.touch
-    local tx, ty = Keyboard.transformTouch(x, y)
+    local touch = keyboard.touch
     
     if touch.touches[id] then
-        touch.touches[id].x = tx
-        touch.touches[id].y = ty
-        touch.touches[id].rawX = x
-        touch.touches[id].rawY = y
+        touch.touches[id].x = x
+        touch.touches[id].y = y
         touch.touches[id].state = -1
     end
     
@@ -225,4 +189,4 @@ function love.touchreleased(id, x, y, dx, dy, pressure)
     touch.anyTouch = touch.touchCount > 0
 end
 
-return Keyboard
+return keyboard

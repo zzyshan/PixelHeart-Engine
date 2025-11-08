@@ -55,6 +55,17 @@ local INTERMEDIATE_CANVAS = love.graphics.newCanvas(
 )
 INTERMEDIATE_CANVAS:setFilter("nearest", "nearest")
 
+local top_canvas = love.graphics.newCanvas(
+    love.graphics.getWidth(),
+    love.graphics.getHeight(),
+    nil,
+    {
+        format = "stencil",
+        readable = true
+    }
+)
+top_canvas:setFilter("nearest", "nearest")
+
 global.SetVar("ScreenShaders", {})
 
 function love.load()
@@ -63,8 +74,9 @@ function love.load()
     if love.system.getOS() == "Android" then
         love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
     end
+    
     -- 初始化场景
-    scenes.into("battle", {BATTLE = "poseur"})
+    scenes.into("Overworld", {WORLD = "map1"})
 end
 
 function love.update(dt)
@@ -107,7 +119,6 @@ function love.draw()
             scenes.newscene.draw()
         end
         DEBUG.draw()
-        layers.sortTop()
         -- zh.结束相机变换 
         -- en.End Camera Transform
         if Camera.NewCamera then
@@ -146,6 +157,18 @@ function love.draw()
             love.graphics.draw(CANVAS)
         end
     love.graphics.pop()
+    
+    love.graphics.push()
+        love.graphics.setCanvas({top_canvas, stencil = true})
+        love.graphics.clear(true, true, true)
+        
+        layers.sortTop()
+        vkb.draw()
+        
+        love.graphics.setCanvas()
+        
+        love.graphics.draw(top_canvas, 0, 0)
+    love.graphics.pop()
 end
 
 function love.keypressed(key)
@@ -166,8 +189,11 @@ function love.keypressed(key)
 end
 
 function love.resize(w, h)
-    Keyboard.updateWindowSize(w, h)
+    --Keyboard.updateWindowSize(w, h)
     if CANVAS:getWidth() ~= w or CANVAS:getHeight() ~= h then
         CANVAS = love.graphics.newCanvas(w - draw_x * 2, h - draw_y)
+    end
+    if top_canvas:getWidth() ~= w or top_canvas:getHeight() ~= h then
+        top_canvas = love.graphics.newCanvas(w, h)
     end
 end

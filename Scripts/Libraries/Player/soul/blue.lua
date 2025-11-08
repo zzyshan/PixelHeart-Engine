@@ -18,7 +18,7 @@ local blue = {
 }
 
 function blue.update(dt)
-    if Keyboard.getState("x") > 0 then
+    if Keyboard.isDown("x") then
         Player.speed = 90
     else
         Player.speed = 180
@@ -30,24 +30,24 @@ function blue.update(dt)
         local var = blue.var
         
         if var.direction == "down" then
-            if Keyboard.getState("left") > 0 then
+            if Keyboard.isDown("left") then
                 Player.sprite:Move(-speed_dt * cos, -speed_dt * sin)
             end
-            if Keyboard.getState("right") > 0 then
+            if Keyboard.isDown("right") then
                 Player.sprite:Move(speed_dt * cos, speed_dt * sin)
             end
             if var.canjump or var.iscolliding then
                 if (math.abs(var.currentspeed) < 10) then var.currentspeed = 0 end
             end
             
-            if Keyboard.getState("up") >= 1 and var.canjump then
+            if Keyboard.isDown("up") and var.canjump then
                 var.currentspeed = var.maxspeed
                 var.canjump = false
                 var.jumping = true
             end
             
             if var.jumping then
-                if Keyboard.getState("up") >= 1 then
+                if Keyboard.isDown("up") then
                     var.currentspeed = var.currentspeed - var.gravity
                 else
                     if (var.currentspeed > var.glide) then
@@ -61,24 +61,24 @@ function blue.update(dt)
             
             Player.sprite:Move(var.currentspeed * sin, -var.currentspeed * cos)
         elseif var.direction == "up" then
-            if Keyboard.getState("left") > 0 then
+            if Keyboard.isDown("left") then
                 Player.sprite:Move(speed_dt * cos, speed_dt * sin)
             end
-            if Keyboard.getState("right") > 0 then
+            if Keyboard.isDown("right") then
                 Player.sprite:Move(- speed_dt * cos, - speed_dt * sin)
             end
             if var.canjump or var.iscolliding then
                 if (math.abs(var.currentspeed) < 10) then var.currentspeed = 0 end
             end
             
-            if Keyboard.getState("down") >= 1 and var.canjump then
+            if Keyboard.isDown("down") and var.canjump then
                 var.currentspeed = var.maxspeed
                 var.canjump = false
                 var.jumping = true
             end
             
             if var.jumping then
-                if Keyboard.getState("down") >= 1 then
+                if Keyboard.isDown("down") then
                     var.currentspeed = var.currentspeed - var.gravity
                 else
                     if (var.currentspeed > var.glide) then
@@ -92,24 +92,24 @@ function blue.update(dt)
             
             Player.sprite:Move(var.currentspeed * sin, -var.currentspeed * cos)
         elseif var.direction == "left" then
-            if Keyboard.getState("up") > 0 then
+            if Keyboard.isDown("up") then
                 Player.sprite:Move(- speed_dt * cos, - speed_dt * sin)
             end
-            if Keyboard.getState("down") > 0 then
+            if Keyboard.isDown("down") then
                 Player.sprite:Move(speed_dt * cos, speed_dt * sin)
             end
             if var.canjump or var.iscolliding then
                 if (math.abs(var.currentspeed) < 10) then var.currentspeed = 0 end
             end
             
-            if Keyboard.getState("right") >= 1 and var.canjump then
+            if Keyboard.isDown("right") and var.canjump then
                 var.currentspeed = var.maxspeed
                 var.canjump = false
                 var.jumping = true
             end
             
             if var.jumping then
-                if Keyboard.getState("right") >= 1 then
+                if Keyboard.isDown("right") then
                     var.currentspeed = var.currentspeed - var.gravity
                 else
                     if (var.currentspeed > var.glide) then
@@ -123,24 +123,24 @@ function blue.update(dt)
             
             Player.sprite:Move(var.currentspeed * sin, -var.currentspeed * cos)
         elseif var.direction == "right" then
-            if Keyboard.getState("up") > 0 then
+            if Keyboard.isDown("up") then
                 Player.sprite:Move(speed_dt * cos, speed_dt * sin)
             end
-            if Keyboard.getState("down") > 0 then
+            if Keyboard.isDown("down") then
                 Player.sprite:Move(- speed_dt * cos, - speed_dt * sin)
             end
             if var.canjump or var.iscolliding then
                 if (math.abs(var.currentspeed) < 10) then var.currentspeed = 0 end
             end
             
-            if Keyboard.getState("left") >= 1 and var.canjump then
+            if Keyboard.isDown("left") and var.canjump then
                 var.currentspeed = var.maxspeed
                 var.canjump = false
                 var.jumping = true
             end
             
             if var.jumping then
-                if Keyboard.getState("left") >= 1 then
+                if Keyboard.isDown("left") then
                     var.currentspeed = var.currentspeed - var.gravity
                 else
                     if (var.currentspeed > var.glide) then

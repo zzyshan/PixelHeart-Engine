@@ -128,7 +128,6 @@ end
 
 function battle_init.load()
     scenes.Settype("battle")
-    save.load(1)
     Player.init()
     if battle.load then
         battle.load()

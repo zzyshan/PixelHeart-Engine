@@ -67,7 +67,7 @@ function layers.DEBUG()
 end
 
 function layers.clear()
-    layers.objects = {}
+    layers.objects.manual = {}
 end
 
 return layers
