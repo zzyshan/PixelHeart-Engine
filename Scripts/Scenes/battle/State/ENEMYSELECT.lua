@@ -23,14 +23,14 @@ function ENEMYSELECT.update(ui)
     Player.sprite.x = ui.enemie_text[ui.enemieindex].x - 25
     Player.sprite.y = ui.enemie_text[ui.enemieindex].y + 15
     
-    if Keyboard.getState("down") == 1 then
+    if input.getKeyState("down") == 1 then
         ui.enemieindex = ui.enemieindex < #battle.enemies and ui.enemieindex + 1 or 1
         if #battle.enemies > 1 then
             Audio.PlaySound("snd_menu_0.wav")
         end
     end
 
-    if Keyboard.getState("up") == 1 then
+    if input.getKeyState("up") == 1 then
         ui.enemieindex = ui.enemieindex > 1 and ui.enemieindex - 1 or #battle.enemies
     
         if #battle.enemies > 1 then
@@ -38,10 +38,10 @@ function ENEMYSELECT.update(ui)
         end
     end
     
-    if Keyboard.getState("x") == 1 then
+    if input.getKeyState("x") == 1 then
         ui.ClearTexts(ui.enemie_text)
         STATE("ACTIONSELECT")
-    elseif Keyboard.getState("z") == 1 then
+    elseif input.getKeyState("z") == 1 then
         if ui.newState == "act" then -- 行动中的选择
             -- 隐藏文本
             for i = #ui.enemie_text, 1, -1 do

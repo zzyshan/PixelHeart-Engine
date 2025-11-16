@@ -18,7 +18,7 @@ function ACTIONSELECT.update(ui)
     Player.sprite.x = ui.Buttons[ui.newState].x - 38
     Player.sprite.y = ui.Buttons[ui.newState].y
     
-    if Keyboard.getState("right") == 1 then
+    if input.getKeyState("right") == 1 then
         if ui.Stateindex < #ui.State then
             ui.Stateindex = ui.Stateindex + 1
         else
@@ -29,7 +29,7 @@ function ACTIONSELECT.update(ui)
         ui.newState = ui.State[ui.Stateindex]
     end
     
-    if Keyboard.getState("left") == 1 then
+    if input.getKeyState("left") == 1 then
         if ui.Stateindex > 1 then
             ui.Stateindex = ui.Stateindex - 1
         else
@@ -40,7 +40,7 @@ function ACTIONSELECT.update(ui)
         ui.newState = ui.State[ui.Stateindex]
     end
     
-    if Keyboard.getState("z") == 1 then
+    if input.getKeyState("z") == 1 then
         Audio.PlaySound("snd_menu_1.wav")
         if ui.newState == "fight" then -- 战斗
             Createenemie()

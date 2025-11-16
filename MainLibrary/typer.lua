@@ -615,15 +615,15 @@ function typers.func:Pressed()
     
     local inputPressed = false
     if self.control == "key" or (not self.control) then
-        if Keyboard.getState("x") == 1 then
+        if input.getKeyState("x") == 1 then
             inputPressed = "x"
-        elseif Keyboard.getState("z") == 1 then
+        elseif input.getKeyState("z") == 1 then
             inputPressed = "z"
         end
     elseif self.control == "mouse" then
-        inputPressed = Keyboard.getMouseState()
+        inputPressed = input.getMouseState()
     elseif self.control == "touch" then
-        inputPressed = Keyboard.isTouching()
+        inputPressed = input.isTouching()
     end
 
     if inputPressed ~= "z" and inputPressed then
@@ -841,7 +841,7 @@ function typers.Print(text, position, depth, settings)
     self.char = {}
     self.type = "typer_Print"
     self.offset = {x = 0, y = 0}
-    self.char_spacing = 0
+    self.char_spacing = settings.char_spacing or 0
     self.Createtime = love.timer.getTime()
     
     -- 控制属性
@@ -878,10 +878,14 @@ function typers.Print_func:parseText()
                     Newcolor = {color[1], color[2], color[3]}
                 elseif head == "font" then
                     local size = tonumber(body)
-                    loadFont(body .. size, size)
-                    Newfont = body .. size
+                    loadFont(body, Newsize)
+                    Newfont = body
                 elseif head == "char_spacing" then
                     Newchar_spacing = tonumber(body)
+                elseif head == "offsetx" then
+                    Newoffset.x = tonumber(body)
+                elseif head == "offsety" then
+                    Newoffset.y = tonumber(body)
                 elseif head == "size" then
                     Newsize = tonumber(body)
                     loadFont(Newfont, tonumber(body))
@@ -902,10 +906,13 @@ function typers.Print_func:parseText()
                 local length = utf8CharLength(byte)
                 local char = self.text:sub(i, i + length - 1)
                 
+                local font = fontCache[Newfont .. Newsize]
+                font:setFilter("nearest", "nearest")
+                local intervalX = font:getWidth(char)
+                
                 local character = {
                     offsetx = Newoffset.x,
-                    offsety = Newoffset.x,
-                    x = self.x + Newchar_spacing,
+                    offsety = Newoffset.y,
                     color = {
                         r = Newcolor.r,
                         g = Newcolor.g,
@@ -915,7 +922,8 @@ function typers.Print_func:parseText()
                     font = Newfont,
                     angle = Newangle,
                     size = Newsize,
-                    char = char
+                    char = char,
+                    obj = love.graphics.newText(font, char)
                 }
                 
                 table.insert(self.char, character)
@@ -961,8 +969,6 @@ function typers.Print_func:draw()
             font:setFilter("nearest", "nearest")
             local intervalX = font:getWidth(char.char)
             
-            local obj = love.graphics.newText(font, char.char)
-            
             -- 绘制字符
             love.graphics.setColor(
                 char.color.r,
@@ -971,13 +977,13 @@ function typers.Print_func:draw()
                 char.color.a
             )
             love.graphics.draw(
-                obj,
+                char.obj,
                 X + char.offsetx,
                 self.y + char.offsety,
                 math.rad(char.angle)
             )
             
-            X = X + intervalX
+            X = X + intervalX + self.char_spacing
             love.graphics.pop()
         end
     end

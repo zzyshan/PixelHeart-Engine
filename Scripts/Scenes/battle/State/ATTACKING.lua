@@ -148,7 +148,7 @@ function ATTACKING.update(ui)
             end
         end
 
-        if Keyboard.getState("z") == 1 then
+        if input.getKeyState("z") == 1 then
             AA.isattack = true
             AA.sprites.targetchoice:SetAnimation({"ui/spr_targetchoice_0.png", "ui/spr_targetchoice_1.png"}, 0.15)
         end

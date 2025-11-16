@@ -67,7 +67,7 @@ function ITEMMENU.update(ui)
     end
     
     -- 导航处理 (修正方向)
-    if Keyboard.getState("down") == 1 then
+    if input.getKeyState("down") == 1 then
         -- 向下移动: 从位置1->3, 位置2->4
         if ITEMMENU.itemindex + 2 <= page_item_count then
             ITEMMENU.itemindex = ITEMMENU.itemindex + 2
@@ -78,7 +78,7 @@ function ITEMMENU.update(ui)
         end
     end
     
-    if Keyboard.getState("up") == 1 then
+    if input.getKeyState("up") == 1 then
         -- 向上移动: 从位置3->1, 位置4->2
         if ITEMMENU.itemindex > 2 then
             ITEMMENU.itemindex = ITEMMENU.itemindex - 2
@@ -89,7 +89,7 @@ function ITEMMENU.update(ui)
         end
     end
     
-    if Keyboard.getState("right") == 1 then
+    if input.getKeyState("right") == 1 then
         -- 向右移动: 位置1->2, 位置3->4
         if ITEMMENU.itemindex % 2 == 1 and ITEMMENU.itemindex + 1 <= page_item_count then
             ITEMMENU.itemindex = ITEMMENU.itemindex + 1
@@ -103,7 +103,7 @@ function ITEMMENU.update(ui)
         end
     end
     
-    if Keyboard.getState("left") == 1 then
+    if input.getKeyState("left") == 1 then
         -- 向左移动: 位置2->1, 位置4->3
         if ITEMMENU.itemindex % 2 == 0 then
             ITEMMENU.itemindex = ITEMMENU.itemindex - 1
@@ -118,7 +118,7 @@ function ITEMMENU.update(ui)
     end
     
     -- 确认选择物品
-    if Keyboard.getState("z") == 1 and page_item_count > 0 then
+    if input.getKeyState("z") == 1 and page_item_count > 0 then
         local global_index = (ITEMMENU.current_page - 1) * ITEMMENU.items_per_page + ITEMMENU.itemindex
         local selected_item = Player.inventory[global_index]
         
@@ -136,7 +136,7 @@ function ITEMMENU.update(ui)
         STATE("DIALOGRESULT")
         
     -- 取消选择
-    elseif Keyboard.getState("x") == 1 then
+    elseif input.getKeyState("x") == 1 then
         ui.ClearTexts(ui.itemtext)
         if ITEMMENU.page_text then
             ITEMMENU.page_text:Remove()

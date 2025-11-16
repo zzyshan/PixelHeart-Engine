@@ -30,7 +30,7 @@ function MERCYMENU.update(ui)
     Player.sprite.x = newmercy.x - 25
     Player.sprite.y = newmercy.y + 15
     
-    if Keyboard.getState("up") == 1 and #MERCYMENU.text > 1 then
+    if input.getKeyState("up") == 1 and #MERCYMENU.text > 1 then
         if MM.mercyindex > 1 then
             MM.mercyindex = MM.mercyindex - 1
             Audio.PlaySound("snd_menu_0.wav")
@@ -38,7 +38,7 @@ function MERCYMENU.update(ui)
             MM.mercyindex = #MM.text
             Audio.PlaySound("snd_menu_0.wav")
         end
-    elseif Keyboard.getState("down") == 1 and #MERCYMENU.text > 1 then
+    elseif input.getKeyState("down") == 1 and #MERCYMENU.text > 1 then
         if MM.mercyindex < #MM.text then
             MM.mercyindex = MM.mercyindex + 1
             Audio.PlaySound("snd_menu_0.wav")
@@ -48,7 +48,7 @@ function MERCYMENU.update(ui)
         end
     end
     
-    if Keyboard.getState("z") == 1 then
+    if input.getKeyState("z") == 1 then
         if newmercy.state == "spare" then
             if MM.iscanenemie then
                 for i = #battle.enemies, 1, -1 do
@@ -96,7 +96,7 @@ function MERCYMENU.update(ui)
         end
     end
     
-    if Keyboard.getState("x") == 1 then
+    if input.getKeyState("x") == 1 then
         ui.ClearTexts(MERCYMENU.text)
         STATE("ACTIONSELECT")
     end

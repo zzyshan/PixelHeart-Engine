@@ -2,7 +2,7 @@ local lg = love.graphics
 
 -- zh.导入模块 en.Import Module
 scenes = require("MainLibrary/scenes")
-Keyboard = require("MainLibrary/Keyboard")
+input = require("MainLibrary/input")
 global = require("MainLibrary/Global")
 Audio = require("MainLibrary/Audio")
 Sprites = require("MainLibrary/Sprites")
@@ -13,7 +13,7 @@ Perf = require("perf")
 vkb = require("MainLibrary/virtualkeyboard/virtualkeyboard_init")
 mathlib = require("MainLibrary/mathlib")
 Player = require("Scripts/Libraries/Player/Player_init")
-save = require("MainLibrary/save/SaveSystem")
+save = require("MainLibrary/SaveSystem")
 Camera = require("MainLibrary/camera")
 masks = require("MainLibrary/masks")
 DEBUG = require("MainLibrary/DEBUG")
@@ -76,12 +76,13 @@ function love.load()
     end
     
     -- 初始化场景
+    --scenes.into("battle", {BATTLE = "poseur"})
     scenes.into("Overworld", {WORLD = "map1"})
 end
 
 function love.update(dt)
     Perf.update(dt)
-    Keyboard.update(dt)
+    input.update(dt)
     Audio.update(dt)
     Sprites.allupdate(dt)
     vkb.update(dt)
@@ -189,7 +190,6 @@ function love.keypressed(key)
 end
 
 function love.resize(w, h)
-    --Keyboard.updateWindowSize(w, h)
     if CANVAS:getWidth() ~= w or CANVAS:getHeight() ~= h then
         CANVAS = love.graphics.newCanvas(w - draw_x * 2, h - draw_y)
     end

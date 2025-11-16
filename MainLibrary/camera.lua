@@ -87,6 +87,7 @@ function Camera.new()
     camera.shake = {power = 0, timer = 0}
     camera.smoothness = 0.1
     camera.cover = {sprite = Sprites.New("px.png", {}, 1145, {xscale = 1145, yscale = 1145, r = 0, b = 0, g = 0}), speed = 0.05, newalpha = 0}
+    camera.cover.sprite:allTop(true)
     camera.cover.sprite.alpha = 0
     camera.remove = false
     table.insert(Camera.cameras, camera)

@@ -16,7 +16,7 @@ function Player.init(position, var)
     Player.inventory = Player.inventory or save.GetVariable("player.inventory", 1) or {}
     
     if scenes.Gettype() == "Overworld" then
-        Player.ow = require(path .. "ow")
+        Player.ow = require(path .. "ow/ow")
         -- 初始化overworld状态
         Player.overworld = {
             direction = var.direction or "down",

@@ -6,7 +6,7 @@ local layers = {
 }
 
 function layers.sort()
-    if #layers.objects.manual <= 1 then return end
+    if #layers.objects.manual < 1 then return end
    
     table.sort(layers.objects.manual, function(a, b)
         if a.depth == b.depth then
@@ -23,9 +23,8 @@ function layers.sort()
     end
 end
 
--- 未完成功能,无法使用
 function layers.sortTop()
-    if #layers.objects.allTop <= 1 then return end
+    if #layers.objects.allTop < 1 then return end
    
     table.sort(layers.objects.allTop, function(a, b)
         if a.depth == b.depth then

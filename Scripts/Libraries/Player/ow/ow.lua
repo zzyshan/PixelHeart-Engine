@@ -1,4 +1,6 @@
-local ow = {}
+local ow = {
+    menu = require("Scripts/Libraries/Player/ow/menu")
+}
 
 local Correspondingkey = {
     up = "down",
@@ -12,18 +14,18 @@ local function findMainDirection(direction)
     local Correspondkey = Correspondingkey[direction]
     local Correspondpy_rot = Correspondingkey[py_rot]
     if direction == py_rot then --如果方向等于人物朝向
-        if Keyboard.isDown(Correspondkey) then
+        if input.isKeyDown(Correspondkey) then
             return py_rot
         else
             Player.ismove = true
             return py_rot
         end
     else
-        if Keyboard.isDown(py_rot) then
-            if not Keyboard.isDown(Correspondpy_rot) then
+        if input.isKeyDown(py_rot) then
+            if not input.isKeyDown(Correspondpy_rot) then
                 return py_rot
             else
-                if Keyboard.isDown(Correspondkey) then
+                if input.isKeyDown(Correspondkey) then
                     return py_rot
                 else
                     Player.ismove = true
@@ -32,7 +34,7 @@ local function findMainDirection(direction)
                 end
             end
         else
-            if Keyboard.isDown(Correspondkey) then
+            if input.isKeyDown(Correspondkey) then
                 return py_rot
             else
                 Player.ismove = true
@@ -44,34 +46,40 @@ local function findMainDirection(direction)
 end
 
 function ow.update(dt)
+    ow.menu:update()
+    
     if Player.canmove then
         local py_ow = Player.overworld
         
-        if Keyboard.isDown("up") then
+        if input.isKeyDown("up") then
             py_ow.MainDirection = findMainDirection("up") or py_ow.MainDirection
         end
-        if Keyboard.isDown("down") then
+        if input.isKeyDown("down") then
             py_ow.MainDirection = findMainDirection("down") or py_ow.MainDirection
         end
-        if Keyboard.isDown("left") then
+        if input.isKeyDown("left") then
             py_ow.MainDirection = findMainDirection("left") or py_ow.MainDirection
         end
-        if Keyboard.isDown("right") then
+        if input.isKeyDown("right") then
             py_ow.MainDirection = findMainDirection("right") or py_ow.MainDirection
+        end
+        
+        if input.isKeyDown("c") then
+            ow.menu.show()
         end
         
         local VelocityX, VelocityY = 0, 0
         if Player.ismove then
-            if Keyboard.isDown("up", "w") then
+            if input.isKeyDown("up", "w") then
                 VelocityY = -Player.speed
             end
-            if Keyboard.isDown("down", "s") then
+            if input.isKeyDown("down", "s") then
                 VelocityY = Player.speed
             end
-            if Keyboard.isDown("left", "a") then
+            if input.isKeyDown("left", "a") then
                 VelocityX = -Player.speed
             end
-            if Keyboard.isDown("right", "d") then
+            if input.isKeyDown("right", "d") then
                 VelocityX = Player.speed
             end
             
@@ -88,7 +96,7 @@ function ow.update(dt)
                 py_ow.animTimer = 0
             end
             
-            if not Keyboard.isDown("up") and not Keyboard.isDown("down") and not Keyboard.isDown("left") and not Keyboard.isDown("right") then
+            if not input.isKeyDown("up") and not input.isKeyDown("down") and not input.isKeyDown("left") and not input.isKeyDown("right") then
                 Player.ismove = false
                 py_ow.anim = 0
                 py_ow.animTimer = 0

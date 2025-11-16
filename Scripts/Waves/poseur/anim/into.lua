@@ -11,11 +11,11 @@ battle.AddEnemie("froggit")
 battle.AddEnemie("whimsun")
 
 local num
-local e = 0
+--local e = 0
 
 function into.update(dt, ui)
-    e = e + 1
-    global.camera:SetScale(0.5 + 0.5 * math.sin(e/30), 0.5 + 0.5 * math.sin(e/30))
+    --e = e + 1
+    --global.camera:SetScale(0.5 + 0.5 * math.sin(e/30), 0.5 + 0.5 * math.sin(e/30))
     if not isstart then return end
 
     time = time + 1

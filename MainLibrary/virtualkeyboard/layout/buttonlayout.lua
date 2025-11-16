@@ -51,7 +51,7 @@ function BL.draw()
     end
     
     -- 绘制所有触摸点（蓝色圆圈）
-    local touches = Keyboard.getAllTouches() or {}
+    local touches = input.getAllTouches() or {}
     love.graphics.setColor(0, 0, 1, 0.7)
     for _, touch in pairs(touches) do
         if touch.state ~= -1 then  -- 忽略已释放的触摸
@@ -63,7 +63,7 @@ function BL.draw()
 end
 
 function BL.update(dt)
-    local touches = Keyboard.getAllTouches()
+    local touches = input.getAllTouches()
     
     -- 重置触摸状态（先保留当前触摸ID）
     for _, button in ipairs(BL.buttons) do
@@ -87,9 +87,9 @@ function BL.update(dt)
             
             -- 分配触摸到最近的按钮
             if closestArrow then
-                if Keyboard.getState(closestArrow.id) == 0 then
+                if input.getKeyState(closestArrow.id) == 0 then
                     closestArrow.touchid = touchId
-                    Keyboard.SetVirtualKey(closestArrow.id, true)
+                    input.SetVirtualKey(closestArrow.id, true)
                     closestArrow:Set("virtualkeyboard/buttons/"..closestArrow.BLtype.."-" .. closestArrow.id .. "1.png")
                     closestArrow.istouch = true
                 end
@@ -102,14 +102,14 @@ function BL.update(dt)
         if button.touchid then
             local touch = touches[button.touchid]
             if not touch or touch.state == -1 then
-                Keyboard.SetVirtualKey(button.id, false)
+                input.SetVirtualKey(button.id, false)
                 button:Set("virtualkeyboard/buttons/"..button.BLtype.."-" .. button.id .. ".png")
                 button.touchid = nil
             else
                 -- 即使触摸存在，也要检查是否还在按钮区域内
                 local dist = mathlib.distance(touch.x, touch.y, button.x, button.y)
                 if dist > button.radius then
-                    Keyboard.SetVirtualKey(button.id, false)
+                    input.SetVirtualKey(button.id, false)
                     button:Set("virtualkeyboard/buttons/"..button.BLtype.."-" .. button.id .. ".png")
                     button.touchid = nil
                 end

@@ -61,75 +61,6 @@ local function check_nearest()
 end
 
 local Arena_function = {
-    update = function(Arena, dt)
-        Arena.white.angle = mathlib.smooth(Arena.white.angle,Arena.angle, Arena.speed or 15)
-        Arena.black.angle = mathlib.smooth(Arena.black.angle,Arena.angle, Arena.speed or 15)
-        Arena.white.scale.x = mathlib.smooth(Arena.white.scale.x, Arena.width + 10, Arena.speed or 15)
-        Arena.white.scale.y = mathlib.smooth(Arena.white.scale.y, Arena.height + 10, Arena.speed or 15)
-        Arena.black.scale.x = mathlib.smooth(Arena.black.scale.x, Arena.width, Arena.speed or 15)
-        Arena.black.scale.y = mathlib.smooth(Arena.black.scale.y, Arena.height, Arena.speed or 15)
-        Arena.white:MoveTo(mathlib.smooth(Arena.white.x, Arena.x, Arena.speed or 15), mathlib.smooth(Arena.white.y, Arena.y, Arena.speed or 15))
-        Arena.black:MoveTo(mathlib.smooth(Arena.black.x, Arena.x, Arena.speed or 15), mathlib.smooth(Arena.black.y, Arena.y, Arena.speed or 15))
-        
-        if not Arena.isactive then return end
-        if Arena.mode == "plus" then
-            if Arena.shape == "rectangle" then
-                local black = Arena.black
-                local r = math.rad(Arena.angle)
-                local w, h = Arena.width, Arena.height
-                local sin, cos = math.sin(r), math.cos(r)
-                local dx = (Player.sprite.x - black.x)
-                local dy = (Player.sprite.y - black.y)
-                
-                if dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 -8 and
-                  dy * cos - dx * sin >= h / 2 - 8 and dy * cos - dx * sin <= -h / 2 + 8 then
-                    Arena.containing = true
-                else
-                    Arena.containing = false
-                end
-                
-                if check_amount() <= 1 and check_nearest() == Arena then
-                    local Player = Player.sprite
-                    -- right
-                    while ((Player.x - black.x) * cos + (Player.y - black.y) * sin > w / 2 - 8) do
-                        Player:Move(-cos, -sin)
-                    end
-                    -- left
-                    while ((Player.x - black.x) * cos + (Player.y - black.y) * sin < -w / 2 + 8) do
-                        Player:Move(cos, sin)
-                    end
-                    -- up
-                    while ((Player.y - black.y) * cos + (Player.x - black.x) * -sin < -h / 2 + 8) do
-                        Player:Move(-sin, cos)
-                    end
-                    -- down
-                    while ((Player.y - black.y) * cos + (Player.x - black.x) * -sin > h / 2 - 8) do
-                         Player:Move(sin, -cos)
-                    end
-                end
-                
-                local Player_soul = Player.soul.mode
-                local Player_cos, Player_sin = math.cos(math.rad(Player.sprite.angle)), math.sin(math.rad(Player.sprite.angle))
-                local targetX = Player.sprite.x - (1 * Player_sin)
-                local targetY = Player.sprite.y + (1 * Player_cos)
-                
-                dx = targetX - black.x
-                dy = targetY - black.y
-                
-                if (dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 - 8 and
-                            dx * -sin + dy * cos >= -h / 2 + 8 and dx * -sin + dy * cos <= h / 2 - 8
-                        ) then
-                    if Player_soul.name == "bluesoul" then
-                        Player_soul.var.canjump = false
-                    end
-                else
-                    if Player_soul.name == "bluesoul" then
-                        Player_soul.var.canjump = true
-                    end
-                end
-            end
-        end
-    end,
     Resize = function(Arena, width, height, speed)
         local w = (width >= 16) and width or 16
         local h = (height >= 16) and height or 16
@@ -191,6 +122,76 @@ function Arenas.new(position, w, h, r, shape, mode)
     
     table.insert(Arenas.arenas, Arena)
     return Arena
+end
+
+function Arena_function:update(dt)
+    self.white.angle = mathlib.smooth(self.white.angle,self.angle, self.speed or 15)
+    self.black.angle = mathlib.smooth(self.black.angle,self.angle, self.speed or 15)
+    self.white.scale.x = mathlib.smooth(self.white.scale.x, self.width + 10, self.speed or 15)
+    self.white.scale.y = mathlib.smooth(self.white.scale.y, self.height + 10, self.speed or 15)
+    self.black.scale.x = mathlib.smooth(self.black.scale.x, self.width, self.speed or 15)
+    self.black.scale.y = mathlib.smooth(self.black.scale.y, self.height, self.speed or 15)
+    self.white:MoveTo(mathlib.smooth(self.white.x, self.x, self.speed or 15), mathlib.smooth(self.white.y, self.y, self.speed or 15))
+    self.black:MoveTo(mathlib.smooth(self.black.x, self.x, self.speed or 15), mathlib.smooth(self.black.y, self.y, self.speed or 15))
+    
+    if not self.isactive then return end
+    if self.mode == "plus" then
+        if self.shape == "rectangle" then
+            local black = self.black
+            local r = math.rad(self.angle)
+            local w, h = self.width, self.height
+            local sin, cos = math.sin(r), math.cos(r)
+            local dx = (Player.sprite.x - black.x)
+            local dy = (Player.sprite.y - black.y)
+            
+            if dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 -8 and
+              dy * cos - dx * sin >= h / 2 - 8 and dy * cos - dx * sin <= -h / 2 + 8 then
+                self.containing = true
+            else
+                self.containing = false
+            end
+            
+            if check_amount() <= 1 and check_nearest() == self then
+                local Player = Player.sprite
+                -- right
+                while ((Player.x - black.x) * cos + (Player.y - black.y) * sin > w / 2 - 8) do
+                    Player:Move(-cos, -sin)
+                end
+                -- left
+                while ((Player.x - black.x) * cos + (Player.y - black.y) * sin < -w / 2 + 8) do
+                    Player:Move(cos, sin)
+                end
+                -- up
+                while ((Player.y - black.y) * cos + (Player.x - black.x) * -sin < -h / 2 + 8) do
+                    Player:Move(-sin, cos)
+                end
+                -- down
+                while ((Player.y - black.y) * cos + (Player.x - black.x) * -sin > h / 2 - 8) do
+                     Player:Move(sin, -cos)
+                end
+            end
+            
+            local Player_soul = Player.soul.mode
+            local Player_cos, Player_sin = math.cos(math.rad(Player.sprite.angle)), math.sin(math.rad(Player.sprite.angle))
+            local targetX = Player.sprite.x - (1 * Player_sin)
+            local targetY = Player.sprite.y + (1 * Player_cos)
+            
+            dx = targetX - black.x
+            dy = targetY - black.y
+            
+            if (dx * cos + dy * sin >= -w / 2 + 8 and dx * cos + dy * sin <= w / 2 - 8 and
+                        dx * -sin + dy * cos >= -h / 2 + 8 and dx * -sin + dy * cos <= h / 2 - 8
+                    ) then
+                if Player_soul.name == "bluesoul" then
+                    Player_soul.var.canjump = false
+                end
+            else
+                if Player_soul.name == "bluesoul" then
+                    Player_soul.var.canjump = true
+                end
+            end
+        end
+    end
 end
 
 function Arenas.update(dt)

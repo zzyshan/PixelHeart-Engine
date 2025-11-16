@@ -3,26 +3,26 @@ local red = {
 }
 
 function red.update(dt)
-    if Keyboard.isDown("x") then
+    if input.isKeyDown("x") then
         Player.speed = 90
     else
         Player.speed = 180
     end
     
     if Player.canmove then
-        if Keyboard.isDown("up", "w") then
+        if input.isKeyDown("up", "w") then
             Player.sprite:Move(0, -(Player.speed * dt))
             Player.ismove = true
         end
-        if Keyboard.isDown("down", "s") then
+        if input.isKeyDown("down", "s") then
             Player.sprite:Move(0, (Player.speed * dt))
             Player.ismove = true
         end
-        if Keyboard.isDown("left", "a") then
+        if input.isKeyDown("left", "a") then
             Player.sprite:Move(-(Player.speed * dt), 0)
             Player.ismove = true
         end
-        if Keyboard.isDown("right", "d") then
+        if input.isKeyDown("right", "d") then
             Player.sprite:Move((Player.speed * dt), 0)
             Player.ismove = true
         end

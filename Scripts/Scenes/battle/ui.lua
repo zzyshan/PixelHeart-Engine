@@ -49,7 +49,6 @@ RUNAWAY = require("Scripts/Scenes/battle/State/RUNAWAY")
 WIN = require("Scripts/Scenes/battle/State/WIN")
 DEFENDING = require("Scripts/Scenes/battle/State/DEFENDING")
 ANIMING = require("Scripts/Scenes/battle/State/ANIMING")
---local pb = Sprites.New("ui/640 480.png", {}, 2.5)
 ---------- 用的函数 --------+---
 function ui.ClearTexts(textList)
     for i = #textList, 1, -1 do

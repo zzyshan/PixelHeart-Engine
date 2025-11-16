@@ -25,7 +25,7 @@ function ACTMENU.update(ui)
         end         
         
         if actionCount > 1 then
-            if Keyboard.getState("up") == 1 then
+            if input.getKeyState("up") == 1 then
                 if SE.newcol ~= col then
                     if SE.newrow > 1 then
                         SE.newrow = SE.newrow - 1
@@ -45,7 +45,7 @@ function ACTMENU.update(ui)
                 end
             end
             
-            if Keyboard.getState("down") == 1 then
+            if input.getKeyState("down") == 1 then
                 if SE.newcol ~= col then
                     if SE.newrow < row then
                         SE.newrow = SE.newrow + 1
@@ -65,7 +65,7 @@ function ACTMENU.update(ui)
                 end
             end
             
-            if Keyboard.getState("left") == 1 then                
+            if input.getKeyState("left") == 1 then                
                 if SE.newrow ~= row then
                     if SE.newcol > 1 then
                         SE.newcol = SE.newcol - 1
@@ -85,7 +85,7 @@ function ACTMENU.update(ui)
                 end
             end
             
-            if Keyboard.getState("right") == 1 then        
+            if input.getKeyState("right") == 1 then        
                 if SE.newrow ~= row then
                     if SE.newcol < col then
                         SE.newcol = SE.newcol + 1
@@ -108,7 +108,7 @@ function ACTMENU.update(ui)
             SE.actindex = (SE.newrow - 1) * 2 + SE.newcol
         end
         -- 确认键（Z键）：选择当前行动
-        if Keyboard.getState("z") == 1 then
+        if input.getKeyState("z") == 1 then
             ui.Selectedenemie = nil
             local selectedAction = SE.commands[SE.actindex]
             Audio.PlaySound("snd_menu_1.wav")
@@ -123,7 +123,7 @@ function ACTMENU.update(ui)
             ui.ClearTexts(ui.enemie_text)
             ui.ClearTexts(ui.enemie_acttext)     
         -- 取消键（X键）：返回敌人选择
-        elseif Keyboard.getState("x") == 1 then  
+        elseif input.getKeyState("x") == 1 then  
             -- 清除行动菜单文本
             for i = #ui.enemie_acttext, 1, -1 do
                 ui.enemie_acttext[i]:Remove()
